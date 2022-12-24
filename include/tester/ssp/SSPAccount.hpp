@@ -58,8 +58,4 @@ private:
         prm.statusCode = (pjsip_status_code)200;
         call->answer(prm);
     }
-
-
-    
-
 };

@@ -2,6 +2,7 @@
 
 #include<iostream>
 #include<pjsua2.hpp>
+#include<unordered_map>
 
 #include"Softphone.hpp"
 #include"SoftphoneArguments.hpp"
@@ -15,7 +16,7 @@ private:
     const int _PORT;
     std::string & _PBX_IP;
     pj::Endpoint _endpoint;
-    std::vector<Softphone *> _softphones;
+    std::unordered_map<std::string, Softphone *> _softphone_map;
 
 };
 
@@ -50,13 +51,13 @@ SoftphoneManager::SoftphoneManager(int number_of_softphones, int port, std::stri
     sp_a.domain = _PBX_IP;
     sp_a.secret = "12345678";
     sp_a.timeout = 5000;
-    sp_a.id = 1000;
+    //sp_a.id = 1000;
 
-    for(int id = 0; id < (number_of_softphones * 2); id++)
+    for(int i = 1000; i < (number_of_softphones * 2); i++)
     {
+        sp_a.id = std::to_string(i);
         Softphone sp(sp_a);
-        sp_a.id++;
-        _softphones.push_back(&sp);
+        _softphone_map.insert({sp_a.id, &sp});
     }
 }
 

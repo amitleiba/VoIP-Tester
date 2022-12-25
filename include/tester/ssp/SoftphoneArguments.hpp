@@ -6,5 +6,5 @@ struct SoftphoneArguments
     std::string secret;
     std::string domain;
     int timeout; //in seconds
-    int id;
+    std::string id;
 };

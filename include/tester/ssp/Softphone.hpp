@@ -5,26 +5,26 @@
 
 #include"SSPAccount.hpp"
 #include"SSPCall.hpp"
+#include"SoftphoneArguments.hpp"
 
 class Softphone
 {
 public:
-    Softphone(int account_id, std::string & pbx_ip);
+    Softphone(SoftphoneArguments sp_a)
+    {
+        _account.createAccount(sp_a.id, sp_a.domain, sp_a.secret);
+        if(sp_a.id % 2 == 1)
+        {
+            SSPCall *call = new SSPCall(_account);
+            _account.pushToCalls(call);
+            std::string d_uri = "sip:"+std::to_string(sp_a.id - 1) + sp_a.domain;
+            call->callTo(d_uri);
+            //TODO: when to stop the call
+        }
+    }
     ~Softphone();
 
 private:
     SSPAccount _account;
 
 };
- 
-Softphone::Softphone(int account_id, std::string & pbx_ip)
-{
-    _account.createAccount(account_id, pbx_ip);
-    if(account_id % 2 == 0){
-        SSPCall *call = new SSPCall(_account);
-        _account.pushToCalls(call);
-        std::string d_uri = "sip:"+std::to_string(account_id - 1) + pbx_ip;
-        call->callTo(d_uri);
-        //TODO: when to stop the call
-    }
-}

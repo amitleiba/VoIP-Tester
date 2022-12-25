@@ -4,6 +4,7 @@
 #include<pjsua2.hpp>
 
 #include"Softphone.hpp"
+#include"SoftphoneArguments.hpp"
 
 class SoftphoneManager
 {
@@ -45,8 +46,17 @@ SoftphoneManager::SoftphoneManager(int number_of_softphones, int port, std::stri
         std::cout << "Exception: " << err.info() << std::endl;
     }
     
-    for(int id = 1000; id < (number_of_softphones * 2 + 1000); id+=2){
-        Softphone sp1(id, _PBX_IP), sp2(id+1, _PBX_IP);
+    SoftphoneArguments sp_a;
+    sp_a.domain = _PBX_IP;
+    sp_a.secret = "12345678";
+    sp_a.timeout = 5000;
+    sp_a.id = 1000;
+
+    for(int id = 0; id < (number_of_softphones * 2); id++)
+    {
+        Softphone sp(sp_a);
+        sp_a.id++;
+        _softphones.push_back(&sp);
     }
 }
 

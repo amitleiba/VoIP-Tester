@@ -10,7 +10,7 @@ class SSPAccount : public pj::Account
 public:
     SSPAccount();
     ~SSPAccount();
-    void createAccount(int account_id, std::string & pbx_ip);
+    void createAccount(int account_id, std::string & domain, std::string & password);
     void onRegState(pj::OnRegStateParam &prm) override;    
     void onIncomingCall(pj::OnIncomingCallParam &iprm) override;
     void removeCall(pj::Call *call);
@@ -36,18 +36,18 @@ private:
             }
     }
 
-    void SSPAccount::createAccount(int account_id, std::string & pbx_ip)
+    void SSPAccount::createAccount(int account_id, std::string & domain, std::string & password)
     {
         pj::AccountConfig acc_cfg;
-        std::string uri = "sip:" + std::to_string(account_id) + pbx_ip;
+        std::string uri = "sip:" + std::to_string(account_id) + domain;
         acc_cfg.idUri = uri;
-        acc_cfg.regConfig.registrarUri = "sip:" + pbx_ip;
+        acc_cfg.regConfig.registrarUri = "sip:" + domain;
 
         #if PJSIP_HAS_DIGEST_AKA_AUTH
             AuthCredInfo aci("Digest", "*", "test", PJSIP_CRED_DATA_EXT_AKA | PJSIP_CRED_DATA_PLAIN_PASSWD, "passwd");
             aci.akaK = "passwd";
         #else
-            pj::AuthCredInfo aci("digest", "*", std::to_string(account_id), 0, "12345678");
+            pj::AuthCredInfo aci("digest", "*", std::to_string(account_id), 0, password);
         #endif
         
         acc_cfg.sipConfig.authCreds.push_back(aci);

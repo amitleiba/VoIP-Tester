@@ -20,19 +20,27 @@ public:
     	if (_wav_player)
     	    delete _wav_player;
     }
+
+    void onCallState(pj::OnCallStateParam &prm);
+    void onCallMediaState(pj::OnCallMediaStateParam &prm);
+    void onCallTransferRequest(pj::OnCallTransferRequestParam &prm);
+    void onCallReplaceRequest(pj::OnCallReplaceRequestParam &prm);
+    
+    void callTo(std::string & destination_uri);
+
 private:
     SSPAccount *_myAcc;
     pj::AudioMediaPlayer *_wav_player;
+};
 
-
-    void onCallState(pj::OnCallStateParam &prm)
+    void SSPCall::onCallState(pj::OnCallStateParam &prm)
     {
         PJ_UNUSED_ARG(prm);
 
         pj::CallInfo ci = getInfo();
         std::cout << "*** Call: " <<  ci.remoteUri << " [" << ci.stateText
                 << "]" << std::endl;
-        
+        //TODO add more states
         if (ci.state == PJSIP_INV_STATE_DISCONNECTED) {
             //_myAcc->removeCall(this);
             /* Delete the call */
@@ -40,7 +48,7 @@ private:
         }
     }
 
-    void onCallMediaState(pj::OnCallMediaStateParam &prm)
+    void SSPCall::onCallMediaState(pj::OnCallMediaStateParam &prm)
     {
         pj::CallInfo ci = getInfo();
         // Iterate all the call medias
@@ -57,15 +65,22 @@ private:
     }
 
 
-    void onCallTransferRequest(pj::OnCallTransferRequestParam &prm)
+    void SSPCall::onCallTransferRequest(pj::OnCallTransferRequestParam &prm)
     {
         /* Create new Call for call transfer */
         prm.newCall = new SSPCall(*_myAcc);
     }
 
-    void onCallReplaceRequest(pj::OnCallReplaceRequestParam &prm)
+    void SSPCall::onCallReplaceRequest(pj::OnCallReplaceRequestParam &prm)
     {
         /* Create new Call for call replace */
         prm.newCall = new SSPCall(*_myAcc);
     }
-};
+
+    void SSPCall::callTo(std::string & destination_uri)
+    {
+        pj::CallOpParam prm(true);
+        prm.opt.audioCount = 1;
+        prm.opt.videoCount = 0;
+        makeCall(destination_uri, prm);
+    }

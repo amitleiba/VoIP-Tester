@@ -4,19 +4,18 @@
 #include<pjsua2.hpp>
 
 #include"SSPCall.hpp"
-#include"SoftphoneArguments.hpp"
 
 class SSPAccount : public pj::Account
 {
 public:
-    SSPAccount(SoftphoneArguments sp_a) 
+    SSPAccount(const std::string & id, const std::string & domain, const std::string & secret) 
     {
-        std::string uri = "sip:" + sp_a.id + sp_a.domain;
+        std::string uri = "sip:" + id + domain;
         _acc_cfg.idUri = uri;
-        _acc_cfg.regConfig.registrarUri = "sip:" + sp_a.domain;
+        _acc_cfg.regConfig.registrarUri = "sip:" + domain;
 
 
-        pj::AuthCredInfo aci("digest", "*", sp_a.id, 0, sp_a.secret);
+        pj::AuthCredInfo aci("digest", "*", id, 0, secret);
 
         
         _acc_cfg.sipConfig.authCreds.push_back(aci);

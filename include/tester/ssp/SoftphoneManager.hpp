@@ -3,6 +3,7 @@
 #include<iostream>
 #include<pjsua2.hpp>
 #include<unordered_map>
+#include <string>
 
 #include"Softphone.hpp"
 #include"SoftphoneArguments.hpp"
@@ -58,7 +59,7 @@ public:
         {
             args.id = std::to_string(i + 1000);
             Softphone sp(args);
-            _softphone_map.insert({args.id, sp});
+            _softphones.insert({args.id, std::move(sp)});
         }
         //TODO: think where to use sp.makeCall()
     }
@@ -67,6 +68,6 @@ private:
     const int _port;
     const std::string _domain;
     pj::Endpoint _endpoint;
-    std::unordered_map<std::string, Softphone> _softphone_map;
+    std::unordered_map<std::string, Softphone> _softphones;
 
 };

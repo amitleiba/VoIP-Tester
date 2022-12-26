@@ -1,18 +1,17 @@
 #pragma once
 
 #include<iostream>
-#include<pjsua2.hpp>
+#include<functional>
 
-#include"SSPAccount.hpp"
+#include<pjsua2.hpp>
 
 class SSPCall : public pj::Call
 {
 public:
-    SSPCall(pj::Account &acc, int call_id = PJSUA_INVALID_ID)
-    : pj::Call(acc, call_id)
+    SSPCall(pj::Account &acc, std::function<void(pj::CallInfo ci,const pj::OnCallStateParam & prm)> onCallState,
+        int call_id = PJSUA_INVALID_ID): pj::Call(acc, call_id), _onCallState(std::move(onCallState))
     {
     	_wav_player = NULL;
-        _myAcc = (SSPAccount *)&acc;
     }
     
     ~SSPCall()
@@ -21,22 +20,13 @@ public:
     	    delete _wav_player;
     }
 
-    void onCallState(pj::OnCallStateParam &prm)
+    void onCallState(pj::OnCallStateParam &prm) override
     {
-        PJ_UNUSED_ARG(prm);
-
         pj::CallInfo ci = getInfo();
-        std::cout << "*** Call: " <<  ci.remoteUri << " [" << ci.stateText
-                << "]" << std::endl;
-        //TODO add more states (which one???)
-        if (ci.state == PJSIP_INV_STATE_DISCONNECTED) {
-            //_myAcc->removeCall(this);
-            /* Delete the call */
-            //delete this;
-        }
+        _onCallState(std::move(ci), prm);
     }
 
-    void onCallMediaState(pj::OnCallMediaStateParam &prm)
+    void onCallMediaState(pj::OnCallMediaStateParam &prm) override
     {
         pj::CallInfo ci = getInfo();
         // Iterate all the call medias
@@ -51,20 +41,8 @@ public:
             }
         }
     }
-
-    void onCallTransferRequest(pj::OnCallTransferRequestParam &prm)
-    {
-        /* Create new Call for call transfer */
-        prm.newCall = new SSPCall(*_myAcc);
-    }
-
-    void onCallReplaceRequest(pj::OnCallReplaceRequestParam &prm)
-    {
-        /* Create new Call for call replace */
-        prm.newCall = new SSPCall(*_myAcc);
-    }
     
-    void callTo(std::string & destination_uri)
+    void callTo(const std::string & destination_uri)
     {
         pj::CallOpParam prm(true);
         prm.opt.audioCount = 1;
@@ -73,6 +51,6 @@ public:
     }
 
 private:
-    SSPAccount *_myAcc;
     pj::AudioMediaPlayer *_wav_player;
+    std::function<void(pj::CallInfo,const pj::OnCallStateParam &)> _onCallState;
 };

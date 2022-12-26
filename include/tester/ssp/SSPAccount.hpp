@@ -10,13 +10,15 @@
 class SSPAccount : public pj::Account
 {
 public:
-    SSPAccount(const std::string & id, const std::string & domain, const std::string & secret) 
+    SSPAccount(const std::string & id, const std::string & domain, const std::string & secret,
+        std::function<void(const pj::OnIncomingCallParam &iprm)> onIncomingCall):
+        _onIncomingCall(onIncomingCall)
     {
-        std::string uri = sip + id + domain;
+        std::string uri = SIP + id + domain;
         _acc_cfg.idUri = uri;
-        _acc_cfg.regConfig.registrarUri = sip + domain;
+        _acc_cfg.regConfig.registrarUri = SIP + domain;
 
-        pj::AuthCredInfo aci(scheme, realm, id, data_type, secret);
+        pj::AuthCredInfo aci(SCHEME, REALM, id, DATA_TYPE, secret);
 
         _acc_cfg.sipConfig.authCreds.push_back(aci);
     }
@@ -24,9 +26,7 @@ public:
     ~SSPAccount()
     {
         shutdown();
-        std::cout << "*** Account is being deleted: No of _calls="
-            << (hasActiveCall()? "1" : "0") << std::endl;
-        removeCall();
+        std::cout << "*** Account is being deleted ***" << std::endl;
     }
 
     void applyAccount()
@@ -47,52 +47,17 @@ public:
 
     void onIncomingCall(pj::OnIncomingCallParam &iprm) override
     {
-        if(!hasActiveCall())
-        {
-            _call = new SSPCall(*this, iprm.callId);
-            pj::CallInfo ci = _call->getInfo();
-            pj::CallOpParam prm;
-            
-            std::cout << "*** Incoming Call: " <<  ci.remoteUri << " ["
-                    << ci.stateText << "]" << std::endl;
-            
-            prm.statusCode = (pjsip_status_code)200;
-            _call->answer(prm);
-        }
-    }
-
-    void removeCall()
-    {
-        delete _call;
-    }
-    
-    bool hasActiveCall()
-    {
-        pj::CallInfo callInfo = _call->getInfo();
-        if(callInfo.state == PJSIP_INV_STATE_CONFIRMED)
-            return true;
-        return false;
-    }
-
-    void setCall(SSPCall * call)
-    {
-        _call = call;
-    }
-
-    void call(std::string & id_to_call, std::string & domain)
-    {
-        _call = new SSPCall(*this);
-        std::string d_uri = "sip:" + id_to_call + "" + domain;
-        _call->callTo(d_uri);
-        //TODO: when to stop the call
+        _onIncomingCall(iprm);
     }
     
 private:
-    SSPCall * _call;
+    static constexpr auto SIP = "sip:";
+    static constexpr auto SCHEME = "digest";
+    static constexpr auto REALM = "x";
+    static constexpr int DATA_TYPE = 0;
+
     pj::AccountConfig _acc_cfg;
 
-    static constexpr auto sip = "sip:";
-    static constexpr auto scheme = "digest";
-    static constexpr auto realm = "x";
-    static constexpr int data_type = 0;
+    std::function<void(const pj::OnIncomingCallParam &iprm)> _onIncomingCall;
+    
 };

@@ -10,8 +10,8 @@
 class SoftphoneManager
 {
 public:
-    SoftphoneManager(int number_of_softphones, int port, std::string & PBX_IP):
-        _PORT(port), _PBX_IP(PBX_IP)
+    SoftphoneManager(int number_of_softphones, int port, std::string domain):
+        _port(port), _domain(domain)
     {
         pjLibraryInit();
         createSoftphone(number_of_softphones);
@@ -33,7 +33,7 @@ public:
 
             // Transport
             pj::TransportConfig tcfg;
-            tcfg.port = _PORT;
+            tcfg.port = _port;
             _endpoint.transportCreate(PJSIP_TRANSPORT_UDP, tcfg);
 
             // Start library
@@ -42,31 +42,31 @@ public:
         }
         catch(pj::Error & err)
         {
-            std::cout << "Exception: " << err.info() << std::endl;
+            std::cerr << "Exception: " << err.info() << std::endl;
         }
     }
 
     void createSoftphone(int number_of_softphones)
     {
-        SoftphoneArguments sp_a;
-        sp_a.domain = _PBX_IP;
-        sp_a.secret = "12345678";
-        sp_a.timeout = 5000;
-        //sp_a.id = 1000;
+        SoftphoneArguments args;
+        args.domain = _domain;
+        args.secret = "12345678";
+        args.timeout = 5000;
+        //args.id = 1000;
 
         for(int i = 0; i < (number_of_softphones * 2); i++)
         {
-            sp_a.id = std::to_string(i + 1000);
-            Softphone sp(sp_a);
-            _softphone_map.insert({sp_a.id, &sp});
+            args.id = std::to_string(i + 1000);
+            Softphone sp(args);
+            _softphone_map.insert({args.id, sp});
         }
         //TODO: think where to use sp.makeCall()
     }
 
 private:
-    const int _PORT;
-    std::string & _PBX_IP;
+    const int _port;
+    const std::string _domain;
     pj::Endpoint _endpoint;
-    std::unordered_map<std::string, Softphone *> _softphone_map;
+    std::unordered_map<std::string, Softphone> _softphone_map;
 
 };

@@ -10,20 +10,16 @@
 class Softphone
 {
 public:
-    Softphone(const SoftphoneArguments & sp_a):
+    Softphone(const SoftphoneArguments sp_a):
         _account(sp_a.id, sp_a.domain, sp_a.secret)
     {
         _account.applyAccount();
     }
     ~Softphone();
 
-    void makeNewCall()
+    void call(std::string & id_to_call, std::string & domain)
     {  
-        SSPCall *call = new SSPCall(_account);
-        _account.setCall(call);
-            std::string d_uri = "sip: next account id domain";
-            call->callTo(d_uri);
-            //TODO: when to stop the call
+        _account.call(id_to_call, domain);
     }
 
 private:

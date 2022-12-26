@@ -1,6 +1,8 @@
 #pragma once
 
 #include<iostream>
+#include<string>
+
 #include<pjsua2.hpp>
 
 #include"SSPCall.hpp"
@@ -10,14 +12,12 @@ class SSPAccount : public pj::Account
 public:
     SSPAccount(const std::string & id, const std::string & domain, const std::string & secret) 
     {
-        std::string uri = "sip:" + id + domain;
+        std::string uri = sip + id + domain;
         _acc_cfg.idUri = uri;
-        _acc_cfg.regConfig.registrarUri = "sip:" + domain;
+        _acc_cfg.regConfig.registrarUri = sip + domain;
 
+        pj::AuthCredInfo aci(scheme, realm, id, data_type, secret);
 
-        pj::AuthCredInfo aci("digest", "*", id, 0, secret);
-
-        
         _acc_cfg.sipConfig.authCreds.push_back(aci);
     }
 
@@ -26,7 +26,6 @@ public:
         shutdown();
         std::cout << "*** Account is being deleted: No of _calls="
             << (hasActiveCall()? "1" : "0") << std::endl;
-
         removeCall();
     }
 
@@ -35,7 +34,7 @@ public:
         try{
             create(_acc_cfg);
         } catch (...) {
-            std::cout << "Adding account failed" << std::endl;
+            std::cerr << "Adding account failed" << std::endl;
         }
     }
 
@@ -79,9 +78,21 @@ public:
     {
         _call = call;
     }
-    
 
+    void call(std::string & id_to_call, std::string & domain)
+    {
+        _call = new SSPCall(*this);
+        std::string d_uri = "sip:" + id_to_call + "" + domain;
+        _call->callTo(d_uri);
+        //TODO: when to stop the call
+    }
+    
 private:
     SSPCall * _call;
     pj::AccountConfig _acc_cfg;
+
+    static constexpr auto sip = "sip:";
+    static constexpr auto scheme = "digest";
+    static constexpr auto realm = "x";
+    static constexpr int data_type = 0;
 };

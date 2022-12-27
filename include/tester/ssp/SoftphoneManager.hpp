@@ -12,10 +12,9 @@ class SoftphoneManager
 {
 public:
     SoftphoneManager(int number_of_softphones, int port, std::string domain):
-        _port(port), _domain(domain)
+        _port(std::move(port)), _domain(std::move(domain))
     {
         pjLibraryInit();
-        createSoftphone(number_of_softphones);
     }
 
     ~SoftphoneManager() = default;

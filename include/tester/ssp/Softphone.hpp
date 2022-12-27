@@ -12,17 +12,16 @@ class Softphone
 {
 public:
     Softphone(const SoftphoneArguments & args):
-        _account(args.id, args.domain, args.secret, std::bind(&inComingCall, *this, std::placeholders::_1)),
-        _call(&_account, std::bind(&onCallState, *this, std::placeholders::_2)) //TODO
+        _account(args.id, args.domain, args.secret, std::bind(&Softphone::onInComingCall, this, std::placeholders::_1))
     {
+        _call = new SSPCall(&_account, boundOnCallState);
         _account.applyAccount();
     }
 
     ~Softphone();
 
-    void call(std::string & id_to_call, std::string & domain)
-    {  
-        _call = new SSPCall(*this); //TODO
+    void call(const std::string & id_to_call, const std::string & domain)
+    {
         std::string d_uri = SIP + id_to_call + domain;
         _call->callTo(d_uri);
     }
@@ -38,9 +37,9 @@ public:
         }
     }
 
-    void inComingCall(const pj::OnIncomingCallParam &iprm)
+    void onInComingCall(const pj::OnIncomingCallParam &iprm)
     {
-        SSPCall *in_call = new SSPCall(&_account, iprm.callId); //TODO
+        SSPCall *in_call = new SSPCall(&_account,boundOnCallState, iprm.callId); //TODO
         if(!_call->isActive()){
             _call = std::move(in_call);
             pj::CallInfo ci = _call->getInfo();
@@ -66,7 +65,8 @@ public:
 
 private:
     static constexpr auto SIP = "sip:";
-
+    std::function<void(pj::CallInfo ci, const pj::OnCallStateParam &prm)> boundOnCallState =
+        std::bind(&Softphone::onCallState, this, std::placeholders::_1, std::placeholders::_2);
     SSPAccount _account;
     SSPCall *_call;
 };

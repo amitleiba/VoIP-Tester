@@ -8,12 +8,12 @@
 class SSPCall : public pj::Call
 {
 public:
-    SSPCall(pj::Account &acc, std::function<void(pj::CallInfo ci,const pj::OnCallStateParam & prm)> onCallState,
-        int call_id = PJSUA_INVALID_ID): pj::Call(acc, call_id), _onCallState(std::move(onCallState))
+    SSPCall(pj::Account *acc, std::function<void(pj::CallInfo ci,const pj::OnCallStateParam & prm)> onCallState,
+        int call_id = PJSUA_INVALID_ID): pj::Call(*acc, call_id), _onCallState(std::move(onCallState))
     {
     	_wav_player = NULL;
     }
-    
+
     ~SSPCall()
     {
     	if (_wav_player)

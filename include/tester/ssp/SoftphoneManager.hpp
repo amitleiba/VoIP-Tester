@@ -60,7 +60,6 @@ public:
             Softphone sp(args);
             _softphones.insert({args.id, std::move(sp)});
         }
-        //TODO: think where to use sp.makeCall()
     }
 
 private:

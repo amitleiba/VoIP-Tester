@@ -3,6 +3,7 @@
 #include<iostream>
 #include<string>
 #include<functional>
+#include<memory>
 
 #include"SSPAccount.hpp"
 #include"SSPCall.hpp"
@@ -14,8 +15,8 @@ public:
     Softphone(const SoftphoneArguments & args):
         _account(args.id, args.domain, args.secret, std::bind(&Softphone::onIncomingCall, this, std::placeholders::_1))
     {
-        _call = new SSPCall(&_account, std::bind(&Softphone::onCallState,
-            this, std::placeholders::_1, std::placeholders::_2));
+        _call = std::make_unique<SSPCall>(&_account, std::bind(&Softphone::onCallState, this,
+            std::placeholders::_1, std::placeholders::_2));
         _account.apply();
     }
 
@@ -33,7 +34,7 @@ public:
         << "]" << std::endl;
         if (ci.state == PJSIP_INV_STATE_DISCONNECTED) {
             /* Delete the call */
-            delete _call;
+            _call.reset();
         }
     }
 
@@ -42,7 +43,7 @@ public:
         SSPCall *in_call = new SSPCall(&_account, std::bind(&Softphone::onCallState,
             this, std::placeholders::_1, std::placeholders::_2), iprm.callId);
         if(!_call->isActive()){
-            _call = std::move(in_call);
+            _call = std::make_unique<SSPCall>(std::move(in_call));
             pj::CallInfo ci = _call->getInfo();
             pj::CallOpParam prm;
             std::cout << "*** Incoming Call: " <<  ci.remoteUri << " ["
@@ -67,5 +68,5 @@ public:
 private:
     static constexpr auto SIP = "sip:";
     SSPAccount _account;
-    SSPCall *_call;
+    std::unique_ptr<SSPCall> _call;
 };

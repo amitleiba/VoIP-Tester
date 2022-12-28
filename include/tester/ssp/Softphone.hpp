@@ -16,7 +16,7 @@ public:
     {
         _call = new SSPCall(&_account, std::bind(&Softphone::onCallState,
             this, std::placeholders::_1, std::placeholders::_2));
-        _account.applyAccount();
+        _account.apply();
     }
 
     ~Softphone() = default;

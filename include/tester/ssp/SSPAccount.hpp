@@ -15,12 +15,12 @@ public:
         _onIncomingCall(onIncomingCall)
     {
         std::string uri = SIP + id + domain;
-        _acc_cfg.idUri = uri;
-        _acc_cfg.regConfig.registrarUri = SIP + domain;
+        _config.idUri = uri;
+        _config.regConfig.registrarUri = SIP + domain;
 
         pj::AuthCredInfo aci(SCHEME, REALM, id, DATA_TYPE, secret);
 
-        _acc_cfg.sipConfig.authCreds.push_back(aci);
+        _config.sipConfig.authCreds.push_back(aci);
     }
 
     ~SSPAccount()
@@ -29,10 +29,10 @@ public:
         std::cout << "*** Account is being deleted ***" << std::endl;
     }
 
-    void applyAccount()
+    void apply()
     {
         try{
-            create(_acc_cfg);
+            create(_config);
         } catch (...) {
             std::cerr << "Adding account failed" << std::endl;
         }
@@ -56,7 +56,7 @@ private:
     static constexpr auto REALM = "x";
     static constexpr int DATA_TYPE = 0;
 
-    pj::AccountConfig _acc_cfg;
+    pj::AccountConfig _config;
 
     std::function<void(const pj::OnIncomingCallParam &iprm)> _onIncomingCall;
     

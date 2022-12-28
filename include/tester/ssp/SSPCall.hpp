@@ -10,15 +10,9 @@ class SSPCall : public pj::Call
 public:
     SSPCall(pj::Account *acc, std::function<void(pj::CallInfo ci,const pj::OnCallStateParam & prm)> onCallState,
         int call_id = PJSUA_INVALID_ID): pj::Call(*acc, call_id), _onCallState(std::move(onCallState))
-    {
-    	_wav_player = NULL;
-    }
+    {}
 
-    ~SSPCall()
-    {
-    	if (_wav_player)
-    	    delete _wav_player;
-    }
+    ~SSPCall() = default;
 
     void onCallState(pj::OnCallStateParam &prm) override
     {
@@ -51,6 +45,5 @@ public:
     }
 
 private:
-    pj::AudioMediaPlayer *_wav_player;
     std::function<void(pj::CallInfo,const pj::OnCallStateParam &)> _onCallState;
 };

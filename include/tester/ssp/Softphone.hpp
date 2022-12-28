@@ -14,7 +14,8 @@ public:
     Softphone(const SoftphoneArguments & args):
         _account(args.id, args.domain, args.secret, std::bind(&Softphone::onIncomingCall, this, std::placeholders::_1))
     {
-        _call = new SSPCall(&_account, boundOnCallState);
+        _call = new SSPCall(&_account, std::bind(&Softphone::onCallState,
+            this, std::placeholders::_1, std::placeholders::_2));
         _account.applyAccount();
     }
 
@@ -38,7 +39,8 @@ public:
 
     void onIncomingCall(const pj::OnIncomingCallParam &iprm)
     {
-        SSPCall *in_call = new SSPCall(&_account,boundOnCallState, iprm.callId); //TODO
+        SSPCall *in_call = new SSPCall(&_account, std::bind(&Softphone::onCallState,
+            this, std::placeholders::_1, std::placeholders::_2), iprm.callId);
         if(!_call->isActive()){
             _call = std::move(in_call);
             pj::CallInfo ci = _call->getInfo();
@@ -64,8 +66,6 @@ public:
 
 private:
     static constexpr auto SIP = "sip:";
-    std::function<void(pj::CallInfo ci, const pj::OnCallStateParam &prm)> boundOnCallState =
-        std::bind(&Softphone::onCallState, this, std::placeholders::_1, std::placeholders::_2);
     SSPAccount _account;
     SSPCall *_call;
 };

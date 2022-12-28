@@ -18,12 +18,11 @@ public:
         _account.applyAccount();
     }
 
-    ~Softphone();
+    ~Softphone() = default;
 
-    void call(const std::string & id_to_call, const std::string & domain)
+    void call(const std::string & uri)
     {
-        std::string d_uri = SIP + id_to_call + domain;
-        _call->callTo(d_uri);
+        _call->callTo(uri);
     }
 
     void onCallState(pj::CallInfo ci, const pj::OnCallStateParam &prm)

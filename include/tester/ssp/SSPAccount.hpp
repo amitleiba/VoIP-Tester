@@ -14,7 +14,7 @@ public:
         std::function<void(const pj::OnIncomingCallParam &iprm)> onIncomingCall):
         _onIncomingCall(onIncomingCall)
     {
-        std::string uri = SIP + id + domain;
+        std::string uri = SIP + id + "@" + domain;
         _config.idUri = uri;
         _config.regConfig.registrarUri = SIP + domain;
 

@@ -40,10 +40,10 @@ public:
 
     void onIncomingCall(const pj::OnIncomingCallParam &iprm)
     {
-        SSPCall *in_call = new SSPCall(&_account, std::bind(&Softphone::onCallState,
+        std::shared_ptr<SSPCall> in_call = std::make_shared<SSPCall>(&_account, std::bind(&Softphone::onCallState,
             this, std::placeholders::_1, std::placeholders::_2), iprm.callId);
         if(!_call->isActive()){
-            _call = std::make_shared<SSPCall>(std::move(in_call));
+            _call = std::move(in_call);
             pj::CallInfo ci = _call->getInfo();
             pj::CallOpParam prm;
             std::cout << "*** Incoming Call: " <<  ci.remoteUri << " ["
@@ -53,7 +53,7 @@ public:
         }
         else{
             in_call->hangup(PJSIP_SC_BUSY_HERE);
-            delete in_call;
+            in_call.reset();
         }
     }
 

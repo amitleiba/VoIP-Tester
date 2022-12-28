@@ -12,7 +12,7 @@ class Softphone
 {
 public:
     Softphone(const SoftphoneArguments & args):
-        _account(args.id, args.domain, args.secret, std::bind(&Softphone::onInComingCall, this, std::placeholders::_1))
+        _account(args.id, args.domain, args.secret, std::bind(&Softphone::onIncomingCall, this, std::placeholders::_1))
     {
         _call = new SSPCall(&_account, boundOnCallState);
         _account.applyAccount();
@@ -36,7 +36,7 @@ public:
         }
     }
 
-    void onInComingCall(const pj::OnIncomingCallParam &iprm)
+    void onIncomingCall(const pj::OnIncomingCallParam &iprm)
     {
         SSPCall *in_call = new SSPCall(&_account,boundOnCallState, iprm.callId); //TODO
         if(!_call->isActive()){

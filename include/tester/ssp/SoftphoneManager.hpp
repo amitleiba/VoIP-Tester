@@ -17,7 +17,10 @@ public:
         pjLibraryInit();
     }
 
-    ~SoftphoneManager() = default;
+    ~SoftphoneManager()
+    {
+        _endpoint.libDestroy();
+    }
 
     void pjLibraryInit()
     {

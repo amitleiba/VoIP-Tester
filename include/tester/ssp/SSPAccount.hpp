@@ -11,8 +11,9 @@ class SSPAccount : public pj::Account
 {
 public:
     SSPAccount(const std::string & id, const std::string & domain, const std::string & secret,
-        std::function<void(const pj::OnIncomingCallParam &)> onIncomingCall):
-        _onIncomingCall(std::move(onIncomingCall))
+        std::function<void(const pj::OnIncomingCallParam &)> onIncomingCall,
+        std::function<void(const pj::OnRegStateParam &)> onRegState):
+        _onIncomingCall(std::move(onIncomingCall)), _onRegState(std::move(onRegState))
     {
         std::string uri = SIP + id + SEPARATOR + domain;
         _config.idUri = uri;
@@ -40,10 +41,8 @@ public:
     }
 
     void onRegState(pj::OnRegStateParam &prm) override 
-    {
-        pj::AccountInfo ai = getInfo();
-        std::cout << (ai.regIsActive? "*** Register: code=" : "*** Unregister: code=")
-             << prm.code << std::endl;
+    {   
+        _onRegState(prm);
     }
 
     void onIncomingCall(pj::OnIncomingCallParam &iprm) override
@@ -61,5 +60,6 @@ private:
     pj::AccountConfig _config;
 
     std::function<void(const pj::OnIncomingCallParam &)> _onIncomingCall;
+    std::function<void(const pj::OnRegStateParam &)> _onRegState;
     
 };

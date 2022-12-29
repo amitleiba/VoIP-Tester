@@ -13,7 +13,9 @@ class Softphone
 {
 public:
     Softphone(const SoftphoneArguments & args):
-        _account(args.id, args.domain, args.secret, std::bind(&Softphone::onIncomingCall, this, std::placeholders::_1)),
+        _account(args.id, args.domain, args.secret,
+        std::bind(&Softphone::onIncomingCall, this, std::placeholders::_1),
+        std::bind(&Softphone::onRegState, this, std::placeholders::_1)),
         _call(std::make_shared<SSPCall>(&_account, std::bind(&Softphone::onCallState, this,
             std::placeholders::_1)))
     {
@@ -54,8 +56,14 @@ public:
         }
         else{
             incomingCall->hangup(PJSIP_SC_BUSY_HERE);
-            incomingCall.reset();
         }
+    }
+
+    void onRegState(const pj::OnRegStateParam &prm) 
+    {   
+        pj::AccountInfo ai = _account.getInfo();
+        std::cout << (ai.regIsActive? "*** Register: code=" : "*** Unregister: code=")
+             << prm.code << std::endl;
     }
 
     bool hasActiveCall()

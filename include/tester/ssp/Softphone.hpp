@@ -13,10 +13,10 @@ class Softphone
 {
 public:
     Softphone(const SoftphoneArguments & args):
-        _account(args.id, args.domain, args.secret, std::bind(&Softphone::onIncomingCall, this, std::placeholders::_1))
+        _account(args.id, args.domain, args.secret, std::bind(&Softphone::onIncomingCall, this, std::placeholders::_1)),
+        _call(std::make_shared<SSPCall>(&_account, std::bind(&Softphone::onCallState, this,
+            std::placeholders::_1, std::placeholders::_2)))
     {
-        _call = std::make_shared<SSPCall>(&_account, std::bind(&Softphone::onCallState, this,
-            std::placeholders::_1, std::placeholders::_2));
         _account.apply();
     }
 
@@ -40,10 +40,10 @@ public:
 
     void onIncomingCall(const pj::OnIncomingCallParam &iprm)
     {
-        std::shared_ptr<SSPCall> in_call = std::make_shared<SSPCall>(&_account, std::bind(&Softphone::onCallState,
+        auto incomingCall = std::make_shared<SSPCall>(&_account, std::bind(&Softphone::onCallState,
             this, std::placeholders::_1, std::placeholders::_2), iprm.callId);
         if(!_call->isActive()){
-            _call = std::move(in_call);
+            _call = std::move(incomingCall);
             pj::CallInfo ci = _call->getInfo();
             pj::CallOpParam prm;
             std::cout << "*** Incoming Call: " <<  ci.remoteUri << " ["
@@ -52,8 +52,8 @@ public:
             _call->answer(prm);
         }
         else{
-            in_call->hangup(PJSIP_SC_BUSY_HERE);
-            in_call.reset();
+            incomingCall->hangup(PJSIP_SC_BUSY_HERE);
+            incomingCall.reset();
         }
     }
 

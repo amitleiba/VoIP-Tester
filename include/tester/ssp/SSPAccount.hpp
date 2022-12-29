@@ -11,8 +11,8 @@ class SSPAccount : public pj::Account
 {
 public:
     SSPAccount(const std::string & id, const std::string & domain, const std::string & secret,
-        std::function<void(const pj::OnIncomingCallParam &iprm)> onIncomingCall):
-        _onIncomingCall(onIncomingCall)
+        std::function<void(const pj::OnIncomingCallParam &)> onIncomingCall):
+        _onIncomingCall(std::move(onIncomingCall))
     {
         std::string uri = SIP + id + "@" + domain;
         _config.idUri = uri;
@@ -25,8 +25,9 @@ public:
 
     ~SSPAccount()
     {
+        std::cout << "*** Account " + std::to_string(getId()) +" is being deleted ***" << std::endl;
         shutdown();
-        std::cout << "*** Account is being deleted ***" << std::endl;
+        
     }
 
     void apply()
@@ -52,12 +53,13 @@ public:
     
 private:
     static constexpr auto SIP = "sip:";
+    static constexpr auto @ = "@";
     static constexpr auto SCHEME = "digest";
-    static constexpr auto REALM = "x";
+    static constexpr auto REALM = "*";
     static constexpr int DATA_TYPE = 0;
 
     pj::AccountConfig _config;
 
-    std::function<void(const pj::OnIncomingCallParam &iprm)> _onIncomingCall;
+    std::function<void(const pj::OnIncomingCallParam &)> _onIncomingCall;
     
 };

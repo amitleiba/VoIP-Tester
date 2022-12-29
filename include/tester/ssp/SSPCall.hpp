@@ -8,7 +8,7 @@
 class SSPCall : public pj::Call
 {
 public:
-    SSPCall(pj::Account *acc, std::function<void(pj::CallInfo ci,const pj::OnCallStateParam & prm)> onCallState,
+    SSPCall(pj::Account *acc, std::function<void(pj::CallInfo ,const pj::OnCallStateParam & )> onCallState,
         int call_id = PJSUA_INVALID_ID): pj::Call(*acc, call_id), _onCallState(std::move(onCallState))
     {}
 

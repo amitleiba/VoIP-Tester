@@ -55,7 +55,9 @@ public:
             _call->answer(prm);
         }
         else{
-            incomingCall->hangup(PJSIP_SC_BUSY_HERE);
+            pj::CallOpParam opcode;
+            opcode.statusCode = PJSIP_SC_BUSY_HERE;
+            incomingCall->hangup(opcode);
         }
     }
 

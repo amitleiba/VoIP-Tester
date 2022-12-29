@@ -14,7 +14,7 @@ public:
         std::function<void(const pj::OnIncomingCallParam &)> onIncomingCall):
         _onIncomingCall(std::move(onIncomingCall))
     {
-        std::string uri = SIP + id + AT + domain;
+        std::string uri = SIP + id + SEPARATOR + domain;
         _config.idUri = uri;
         _config.regConfig.registrarUri = SIP + domain;
 
@@ -53,7 +53,7 @@ public:
     
 private:
     static constexpr auto SIP = "sip:";
-    static constexpr auto AT = "@";
+    static constexpr auto SEPARATOR = "@";
     static constexpr auto SCHEME = "digest";
     static constexpr auto REALM = "*";
     static constexpr int DATA_TYPE = 0;

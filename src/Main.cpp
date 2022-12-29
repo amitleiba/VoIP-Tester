@@ -58,11 +58,16 @@ int main(){
 
     sp1.call(uri_sp2);
 
+    pj_thread_sleep(10000);
+
+    sp1.hungup();
+
     pj_thread_sleep(5000);
 
-    sp3.call(uri_sp1);
 
-    pj_thread_sleep(100000);
+    //sp3.call(uri_sp1);
+
+    //pj_thread_sleep(100000);
 
     //_endpoint.libDestroy();
 }

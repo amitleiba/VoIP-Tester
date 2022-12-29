@@ -36,8 +36,7 @@ public:
         std::cout << "*** Call: " <<  ci.remoteUri << " [" << ci.stateText
         << "]" << std::endl;
         if (ci.state == PJSIP_INV_STATE_DISCONNECTED) {
-            /* Delete the call */
-            _call.reset();
+            clearCall();
         }
     }
 
@@ -45,7 +44,7 @@ public:
     {
         auto incomingCall = std::make_shared<SSPCall>(&_account, std::bind(&Softphone::onCallState,
             this, std::placeholders::_1), iprm.callId);
-        if(!_call->isActive()){
+        if(!isActive()){
             _call = std::move(incomingCall);
             pj::CallInfo ci = _call->getInfo();
             pj::CallOpParam prm;
@@ -61,6 +60,14 @@ public:
         }
     }
 
+    void hungup()
+    {
+        pj::CallOpParam opcode;
+        opcode.statusCode = PJSIP_SC_DECLINE;
+        _call->hangup(opcode);
+        clearCall();
+    }
+
     void onRegState(const pj::OnRegStateParam &prm) 
     {   
         pj::AccountInfo ai = _account.getInfo();
@@ -68,15 +75,17 @@ public:
              << prm.code << std::endl;
     }
 
-    bool hasActiveCall()
+    bool isActive()
     {
-        pj::CallInfo callInfo = _call->getInfo();
-        if(callInfo.state == PJSIP_INV_STATE_CONFIRMED)
-            return true;
-        return false;
+        return _call->isActive();
     }
 
 private:
+    void clearCall()
+    {
+        _call = std::make_shared<SSPCall>(&_account, std::bind(&Softphone::onCallState, this,
+            std::placeholders::_1));
+    }
     SSPAccount _account;
     std::shared_ptr<SSPCall> _call;
 };

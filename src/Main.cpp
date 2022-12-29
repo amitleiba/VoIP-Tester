@@ -60,7 +60,7 @@ int main(){
 
     pj_thread_sleep(10000);
 
-    sp1.Hungup();
+    sp1.hungup();
 
     pj_thread_sleep(10000);
 

@@ -19,14 +19,15 @@ public:
         _call(std::make_shared<SSPCall>(&_account, std::bind(&Softphone::onCallState, this,
             std::placeholders::_1)))
     {
+        _uri = SIP + args.id + SEPARATOR + args.domain;
         _account.apply();
     }
 
     ~Softphone() = default;
 
-    void call(const std::string & uri)
+    void call(Softphone & sp)
     {
-        _call->callTo(uri);
+        _call->callTo(sp.getUri());
     }
 
     void onCallState(const pj::OnCallStateParam &prm)
@@ -35,7 +36,8 @@ public:
         PJ_UNUSED_ARG(prm);
         std::cout << "*** Call: " <<  ci.remoteUri << " [" << ci.stateText
         << "]" << std::endl;
-        if (ci.state == PJSIP_INV_STATE_DISCONNECTED) {
+        if (ci.state == PJSIP_INV_STATE_DISCONNECTED) 
+        {
             clearCall();
         }
     }
@@ -44,7 +46,8 @@ public:
     {
         auto incomingCall = std::make_shared<SSPCall>(&_account, std::bind(&Softphone::onCallState,
             this, std::placeholders::_1), iprm.callId);
-        if(!isActive()){
+        if(!isActive())
+        {
             _call = std::move(incomingCall);
             pj::CallInfo ci = _call->getInfo();
             pj::CallOpParam prm;
@@ -53,19 +56,19 @@ public:
             prm.statusCode = (pjsip_status_code)200;
             _call->answer(prm);
         }
-        else{
+        else
+        {
             pj::CallOpParam opcode;
             opcode.statusCode = PJSIP_SC_BUSY_HERE;
             incomingCall->hangup(opcode);
         }
     }
 
-    void hungup()
+    void Hungup()
     {
         pj::CallOpParam opcode;
         opcode.statusCode = PJSIP_SC_DECLINE;
         _call->hangup(opcode);
-        clearCall();
     }
 
     void onRegState(const pj::OnRegStateParam &prm) 
@@ -80,12 +83,22 @@ public:
         return _call->isActive();
     }
 
+    std::string getUri()
+    {
+        return _uri;
+    }
+
 private:
     void clearCall()
     {
         _call = std::make_shared<SSPCall>(&_account, std::bind(&Softphone::onCallState, this,
             std::placeholders::_1));
     }
+
+    static constexpr auto SIP = "sip:";
+    static constexpr auto SEPARATOR = "@";
+
+    std::string _uri;
     SSPAccount _account;
     std::shared_ptr<SSPCall> _call;
 };

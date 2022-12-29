@@ -14,7 +14,7 @@ void pjLibraryInit(pj::Endpoint * _endpoint)
 
         // Init library
         pj::EpConfig ep_cfg;
-        ep_cfg.logConfig.level = 5;
+        ep_cfg.logConfig.level = 2;
         _endpoint->libInit( ep_cfg );
 
         // Transport
@@ -54,20 +54,20 @@ int main(){
     Softphone sp3(args);
 
     std::string uri_sp1 = "sip:1000@" + args.domain;
-    std::string uri_sp2 = "sip:1006@" + args.domain;
+    std::string uri_sp2 = "sip:1001@" + args.domain;
 
-    sp1.call(uri_sp2);
+    sp1.call(sp2);
 
     pj_thread_sleep(10000);
 
-    sp1.hungup();
+    sp1.Hungup();
 
-    pj_thread_sleep(5000);
+    pj_thread_sleep(10000);
 
 
-    //sp3.call(uri_sp1);
+    sp3.call(sp1);
 
-    //pj_thread_sleep(100000);
+    pj_thread_sleep(10000);
 
-    //_endpoint.libDestroy();
+    _endpoint.libDestroy();
 }

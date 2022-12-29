@@ -26,9 +26,7 @@ public:
 
     ~SSPAccount()
     {
-        std::cout << "*** Account " + std::to_string(getId()) +" is being deleted ***" << std::endl;
-        shutdown();
-        
+        std::cout << "*** Account " + std::to_string(getId()) +" is being deleted ***" << std::endl;        
     }
 
     void apply()

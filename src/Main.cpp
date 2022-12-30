@@ -60,7 +60,7 @@ int main(){
 
     pj_thread_sleep(10000);
 
-    sp1.hungup();
+    sp1.hangup();
 
     pj_thread_sleep(10000);
 

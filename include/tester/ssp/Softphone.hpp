@@ -64,7 +64,7 @@ public:
         }
     }
 
-    void hungup()
+    void hangup()
     {
         pj::CallOpParam opcode;
         opcode.statusCode = PJSIP_SC_DECLINE;

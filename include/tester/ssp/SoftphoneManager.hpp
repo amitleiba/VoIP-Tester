@@ -11,7 +11,7 @@
 class SoftphoneManager
 {
 public:
-    SoftphoneManager(int number_of_softphones, int port, std::string domain):
+    SoftphoneManager(int port, std::string domain):
         _port(port), _domain(std::move(domain))
     {
         pjLibraryInit();
@@ -49,7 +49,7 @@ public:
         }
     }
 
-    void createSoftphone(int number_of_softphones)
+    void registerSoftphones(int amount)
     {
         SoftphoneArguments args;
         args.domain = _domain;
@@ -57,7 +57,7 @@ public:
         args.timeout = 5000;
         //args.id = 1000;
 
-        for(int i = 0; i < (number_of_softphones * 2); i++)
+        for(int i = 0; i < (amount * 2); i++)
         {
             args.id = std::to_string(i + 1000);
             Softphone sp(args);

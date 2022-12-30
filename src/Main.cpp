@@ -1,7 +1,7 @@
 #include<iostream>
 #include<string>
 
-#include"../include/tester/ssp/Softphone.hpp"
+#include"../include/tester/ssp/SoftphoneManager.hpp"
 #include"../include/tester/ssp/SoftphoneArguments.hpp"
 
 
@@ -33,41 +33,45 @@ void pjLibraryInit(pj::Endpoint * _endpoint)
 }
 
 int main(){
-    pj::Endpoint _endpoint;
+    SoftphoneManager sm(6061, "192.168.1.46");
 
-    pjLibraryInit(&_endpoint);
+    sm.pjLibraryInit();
+    sm.runSpamTest(10);
 
-    std::string DOMAIN = "192.168.1.46";
+    // pj::Endpoint _endpoint;
 
-    SoftphoneArguments args;
-    args.domain = DOMAIN;
-    args.secret = "12345678";
-    args.timeout = 5000;
+    // pjLibraryInit(&_endpoint);
 
-    args.id = "1000";
-    Softphone sp1(args);
+    // std::string DOMAIN = "192.168.1.46";
 
-    args.id = "1001";
-    Softphone sp2(args);
+    // SoftphoneArguments args;
+    // args.domain = DOMAIN;
+    // args.secret = "12345678";
+    // args.timeout = 5000;
 
-    args.id = "1002";
-    Softphone sp3(args);
+    // args.id = "1000";
+    // Softphone sp1(args);
 
-    std::string uri_sp1 = "sip:1000@" + args.domain;
-    std::string uri_sp2 = "sip:1001@" + args.domain;
+    // args.id = "1001";
+    // Softphone sp2(args);
 
-    sp1.call(sp2);
+    // args.id = "1002";
+    // Softphone sp3(args);
 
-    pj_thread_sleep(10000);
+    // std::string uri_sp1 = "sip:1000@" + args.domain;
+    // std::string uri_sp2 = "sip:1001@" + args.domain;
 
-    sp1.hangup();
+    // sp1.call(sp2);
 
-    pj_thread_sleep(10000);
+    // pj_thread_sleep(10000);
 
+    // sp1.hangup();
 
-    sp3.call(sp1);
+    // pj_thread_sleep(10000);
 
-    pj_thread_sleep(10000);
+    // sp3.call(sp1);
 
-    _endpoint.libDestroy();
+    // pj_thread_sleep(10000);
+
+    // _endpoint.libDestroy();
 }

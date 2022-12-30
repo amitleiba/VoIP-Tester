@@ -49,23 +49,40 @@ public:
         }
     }
 
+    void runSpamTest(int amount)
+    {
+        registerSoftphones(amount * 2);
+        for(int i = 0; i < (amount * 2); i += 2)
+        {
+            _softphones.at(std::to_string(i + START_URI)).call(_softphones.at(std::to_string(i + 1 + START_URI)));
+        }
+        pj_thread_sleep(TEST_SLEEP_DURATION * MILLISECONDS_TO_SECONDS);
+        for(int i = 0; i < (amount * 2); i += 2)
+        {
+            _softphones.at(std::to_string(i + START_URI)).hangup();
+        }
+    }
+
+private:
     void registerSoftphones(int amount)
     {
         SoftphoneArguments args;
         args.domain = _domain;
         args.secret = "12345678";
         args.timeout = 5000;
-        //args.id = 1000;
 
-        for(int i = 0; i < (amount * 2); i++)
+        for(int i = 0; i < amount; i++)
         {
-            args.id = std::to_string(i + 1000);
+            args.id = std::to_string(i + START_URI);
             Softphone sp(args);
             _softphones.insert({args.id, std::move(sp)});
         }
     }
 
-private:
+    static constexpr int MILLISECONDS_TO_SECONDS = 1000;
+    static constexpr int TEST_SLEEP_DURATION = 10;
+    static constexpr int START_URI = 1000;
+
     const int _port;
     const std::string _domain;
     pj::Endpoint _endpoint;

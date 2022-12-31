@@ -5,38 +5,38 @@
 #include"../include/tester/ssp/SoftphoneArguments.hpp"
 
 
-void pjLibraryInit(pj::Endpoint * _endpoint)
-{
-    try
-    {
-        //Create library
-        _endpoint->libCreate();
+// void pjLibraryInit(pj::Endpoint * _endpoint)
+// {
+//     try
+//     {
+//         //Create library
+//         _endpoint->libCreate();
 
-        // Init library
-        pj::EpConfig ep_cfg;
-        ep_cfg.logConfig.level = 2;
-        _endpoint->libInit( ep_cfg );
+//         // Init library
+//         pj::EpConfig ep_cfg;
+//         ep_cfg.logConfig.level = 2;
+//         _endpoint->libInit( ep_cfg );
 
-        // Transport
-        pj::TransportConfig tcfg;
-        tcfg.port = 6061;
-        _endpoint->transportCreate(PJSIP_TRANSPORT_UDP, tcfg);
+//         // Transport
+//         pj::TransportConfig tcfg;
+//         tcfg.port = 6061;
+//         _endpoint->transportCreate(PJSIP_TRANSPORT_UDP, tcfg);
 
-        // Start library
-        _endpoint->libStart();
-        std::cout << "*** PJSUA2 STARTED ***" << std::endl;
-    }
-    catch(pj::Error & err)
-    {
-        std::cerr << "Exception: " << err.info() << std::endl;
-    }
-}
+//         // Start library
+//         _endpoint->libStart();
+//         std::cout << "*** PJSUA2 STARTED ***" << std::endl;
+//     }
+//     catch(pj::Error & err)
+//     {
+//         std::cerr << "Exception: " << err.info() << std::endl;
+//     }
+// }
 
 int main(){
-    SoftphoneManager sm(6061, "192.168.1.46");
+    SoftphoneManager manager(6061, "192.168.1.46");
 
-    sm.pjLibraryInit();
-    sm.runSpamTest(10);
+    manager.pjLibraryInit();
+    manager.runSpamTest(10);
 
     // pj::Endpoint _endpoint;
 

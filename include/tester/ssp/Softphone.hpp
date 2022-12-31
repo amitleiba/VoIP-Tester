@@ -88,6 +88,11 @@ public:
         return _uri;
     }
 
+    bool isAccountValid()
+    {
+        return _account.isValid();
+    }
+    
 private:
     void clearCall()
     {

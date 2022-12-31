@@ -5,6 +5,8 @@
 #include<unordered_map>
 #include <string>
 
+#include <pjsua-lib/pjsua.h>
+
 #include"Softphone.hpp"
 #include"SoftphoneArguments.hpp"
 
@@ -14,7 +16,6 @@ public:
     SoftphoneManager(int port, std::string domain):
         _port(port), _domain(std::move(domain))
     {
-        pjLibraryInit();
     }
 
     ~SoftphoneManager()
@@ -54,12 +55,15 @@ public:
         registerSoftphones(amount * 2);
         for(int i = 0; i < (amount * 2); i += 2)
         {
-            _softphones.at(std::to_string(i + START_URI)).call(_softphones.at(std::to_string(i + 1 + START_URI)));
+            if(_softphones.at(std::to_string(i + START_URI))->isAccountValid())
+            {
+                _softphones.at(std::to_string(i + START_URI))->call(*_softphones.at(std::to_string(i + 1 + START_URI)));
+            }
         }
         pj_thread_sleep(TEST_SLEEP_DURATION * MILLISECONDS_TO_SECONDS);
         for(int i = 0; i < (amount * 2); i += 2)
         {
-            _softphones.at(std::to_string(i + START_URI)).hangup();
+            _softphones.at(std::to_string(i + START_URI))->hangup();
         }
     }
 
@@ -74,8 +78,9 @@ private:
         for(int i = 0; i < amount; i++)
         {
             args.id = std::to_string(i + START_URI);
-            Softphone sp(args);
-            _softphones.insert({args.id, std::move(sp)});
+            Softphone *sp = new Softphone(args);
+            _softphones.insert({args.id, sp});
+            pj_thread_sleep(MILLISECONDS_TO_SECONDS);
         }
     }
 
@@ -86,6 +91,6 @@ private:
     const int _port;
     const std::string _domain;
     pj::Endpoint _endpoint;
-    std::unordered_map<std::string, Softphone> _softphones;
+    std::unordered_map<std::string, Softphone*> _softphones;
 
 };

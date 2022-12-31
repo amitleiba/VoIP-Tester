@@ -36,7 +36,7 @@ int main(){
     SoftphoneManager manager(6061, "192.168.1.46");
 
     manager.pjLibraryInit();
-    manager.runSpamTest(10);
+    manager.runSpamTest(20);
 
     // pj::Endpoint _endpoint;
 

@@ -1,11 +1,11 @@
 #pragma once
 
 #include<iostream>
-#include<pjsua2.hpp>
 #include<unordered_map>
-#include <string>
+#include<string>
+#include<memory>
 
-#include <pjsua-lib/pjsua.h>
+#include<pjsua2.hpp>
 
 #include"Softphone.hpp"
 #include"SoftphoneArguments.hpp"
@@ -55,15 +55,19 @@ public:
         registerSoftphones(amount * 2);
         for(int i = 0; i < (amount * 2); i += 2)
         {
-            if(_softphones.at(std::to_string(i + START_URI))->isAccountValid())
+            if(_softphones.at(i)->isAccountValid() && _softphones.at(i + 1)->isAccountValid())
             {
-                _softphones.at(std::to_string(i + START_URI))->call(*_softphones.at(std::to_string(i + 1 + START_URI)));
+                _softphones.at(i)->call(*_softphones.at(i + 1));
+                pj_thread_sleep(MILLISECONDS_TO_SECONDS/TEST_SLEEP_DURATION);
             }
         }
-        pj_thread_sleep(TEST_SLEEP_DURATION * MILLISECONDS_TO_SECONDS);
+        pj_thread_sleep(10 * MILLISECONDS_TO_SECONDS);
         for(int i = 0; i < (amount * 2); i += 2)
         {
-            _softphones.at(std::to_string(i + START_URI))->hangup();
+            if(_softphones.at(i)->isActive())
+            {
+                _softphones.at(i)->hangup();
+            }
         }
     }
 
@@ -78,19 +82,17 @@ private:
         for(int i = 0; i < amount; i++)
         {
             args.id = std::to_string(i + START_URI);
-            Softphone *sp = new Softphone(args);
-            _softphones.insert({args.id, sp});
-            pj_thread_sleep(MILLISECONDS_TO_SECONDS);
+            _softphones.emplace_back(std::make_shared<Softphone>(args));
+            pj_thread_sleep(MILLISECONDS_TO_SECONDS/TEST_SLEEP_DURATION);
         }
     }
 
     static constexpr int MILLISECONDS_TO_SECONDS = 1000;
-    static constexpr int TEST_SLEEP_DURATION = 10;
+    static constexpr int TEST_SLEEP_DURATION = 100;
     static constexpr int START_URI = 1000;
 
     const int _port;
     const std::string _domain;
     pj::Endpoint _endpoint;
-    std::unordered_map<std::string, Softphone*> _softphones;
-
+    std::vector<std::shared_ptr<Softphone>> _softphones;
 };

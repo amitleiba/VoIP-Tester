@@ -33,10 +33,10 @@
 // }
 
 int main(){
-    SoftphoneManager manager(6061, "192.168.1.46");
+    SoftphoneManager manager(5060, "192.168.1.46");
 
     manager.pjLibraryInit();
-    manager.runSpamTest(20);
+    manager.runSpamTest(80);
 
     // pj::Endpoint _endpoint;
 

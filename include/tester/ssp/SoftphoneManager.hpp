@@ -23,7 +23,7 @@ public:
         _endpoint.libDestroy();
     }
 
-    void pjLibraryInit()
+    void pjLibraryInit(int logLevel)
     {
         try
         {
@@ -32,7 +32,7 @@ public:
 
             // Init library
             pj::EpConfig ep_cfg;
-            ep_cfg.logConfig.level = 1;
+            ep_cfg.logConfig.level = logLevel;
             _endpoint.libInit( ep_cfg );
 
             // Transport
@@ -58,10 +58,10 @@ public:
             if(_softphones.at(i)->isAccountValid() && _softphones.at(i + 1)->isAccountValid())
             {
                 _softphones.at(i)->call(*_softphones.at(i + 1));
-                pj_thread_sleep(MILLISECONDS_TO_SECONDS/TEST_SLEEP_DURATION);
+                pj_thread_sleep(TEST_SLEEP_DURATION * MILLISECONDS_TO_SECONDS);
             }
         }
-        pj_thread_sleep(10 * MILLISECONDS_TO_SECONDS);
+        pj_thread_sleep(TEST_SLEEP_DURATION * MILLISECONDS_TO_SECONDS);
         for(int i = 0; i < (amount * 2); i += 2)
         {
             if(_softphones.at(i)->isActive())
@@ -83,12 +83,12 @@ private:
         {
             args.id = std::to_string(i + START_URI);
             _softphones.emplace_back(std::make_shared<Softphone>(args));
-            pj_thread_sleep(MILLISECONDS_TO_SECONDS/TEST_SLEEP_DURATION);
+            pj_thread_sleep(TEST_SLEEP_DURATION * MILLISECONDS_TO_SECONDS);
         }
     }
 
     static constexpr int MILLISECONDS_TO_SECONDS = 1000;
-    static constexpr int TEST_SLEEP_DURATION = 100;
+    static constexpr int TEST_SLEEP_DURATION = 1;
     static constexpr int START_URI = 1000;
 
     const int _port;

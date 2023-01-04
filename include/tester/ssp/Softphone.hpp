@@ -27,7 +27,14 @@ public:
 
     void call(Softphone & sp)
     {
-        _call->callTo(sp.getUri());
+        if(isAccountValid())
+            _call->callTo(sp.getUri());
+    }
+
+    void call(const std::string & destUri)
+    {
+        if(isAccountValid())
+            _call->callTo(destUri);
     }
 
     void onCallState(const pj::OnCallStateParam &prm)
@@ -66,9 +73,12 @@ public:
 
     void hangup()
     {
-        pj::CallOpParam opcode;
-        opcode.statusCode = PJSIP_SC_DECLINE;
-        _call->hangup(opcode);
+        if(isActive())
+        {
+            pj::CallOpParam opcode;
+            opcode.statusCode = PJSIP_SC_DECLINE;
+            _call->hangup(opcode);
+        }
     }
 
     void onRegState(const pj::OnRegStateParam &prm) 

@@ -55,19 +55,13 @@ public:
         registerSoftphones(amount * 2);
         for(int i = 0; i < (amount * 2); i += 2)
         {
-            if(_softphones.at(i)->isAccountValid() && _softphones.at(i + 1)->isAccountValid())
-            {
-                _softphones.at(i)->call(*_softphones.at(i + 1));
-                pj_thread_sleep(TEST_SLEEP_DURATION * MILLISECONDS_TO_SECONDS);
-            }
+            _softphones.at(i)->call(*_softphones.at(i + 1));
+            pj_thread_sleep(TEST_SLEEP_DURATION * MILLISECONDS_TO_SECONDS);
         }
         pj_thread_sleep(TEST_SLEEP_DURATION * MILLISECONDS_TO_SECONDS);
         for(int i = 0; i < (amount * 2); i += 2)
         {
-            if(_softphones.at(i)->isActive())
-            {
-                _softphones.at(i)->hangup();
-            }
+            _softphones.at(i)->hangup();
         }
     }
 

@@ -1,12 +1,11 @@
 #include<iostream>
 #include<string>
 
-#include"../include/tester/ssp/SoftphoneManager.hpp"
-#include"../include/tester/ssp/SoftphoneArguments.hpp"
+#include"tester/ssp/SoftphoneManager.hpp"
 
 int main(){
-    SoftphoneManager manager(5060, "192.168.1.46");
+    SoftphoneManager manager(5060, "192.168.132.93");
 
-    manager.pjLibraryInit(1);
-    manager.runSpamTest(80);
+    manager.pjLibraryInit(0);
+    manager.runSpamTest(100);
 }

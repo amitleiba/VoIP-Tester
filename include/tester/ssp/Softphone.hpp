@@ -27,13 +27,13 @@ public:
 
     void call(Softphone & sp)
     {
-        if(isAccountValid())
+        if(isRegistered() && !isActive())
             _call->callTo(sp.getUri());
     }
 
     void call(const std::string & destUri)
     {
-        if(isAccountValid())
+        if(isRegistered() && !isActive())
             _call->callTo(destUri);
     }
 
@@ -43,11 +43,17 @@ public:
         PJ_UNUSED_ARG(prm);
         std::cout << "*** Call: " <<  ci.remoteUri << " [" << ci.stateText
         << "]" << std::endl;
-        if (ci.state == PJSIP_INV_STATE_DISCONNECTED) 
+        if (ci.state == PJSIP_INV_STATE_DISCONNECTED)
         {
             clearCall();
         }
     }
+
+    pjsip_inv_state getState()
+    {
+        return _call->getInfo().state;
+    }
+
 
     void onIncomingCall(const pj::OnIncomingCallParam &iprm)
     {
@@ -60,7 +66,7 @@ public:
             pj::CallOpParam prm;
             std::cout << "*** Incoming Call: " <<  ci.remoteUri << " ["
                     << ci.stateText << "]" << std::endl;
-            prm.statusCode = (pjsip_status_code)200;
+            prm.statusCode = PJSIP_SC_OK;
             _call->answer(prm);
         }
         else
@@ -98,9 +104,9 @@ public:
         return _uri;
     }
 
-    bool isAccountValid()
+    bool isRegistered()
     {
-        return _account.isValid();
+        return _account.getInfo().regIsActive;
     }
     
 private:

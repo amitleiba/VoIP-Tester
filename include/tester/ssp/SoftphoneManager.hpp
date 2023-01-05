@@ -20,7 +20,9 @@ public:
 
     ~SoftphoneManager()
     {
+
         _endpoint.libDestroy();
+        _softphones.clear();  //TODO
     }
 
     void pjLibraryInit(int logLevel)
@@ -53,15 +55,21 @@ public:
     void runSpamTest(int amount)
     {
         registerSoftphones(amount * 2);
+        pj_thread_sleep(TEST_SLEEP_DURATION * MILLISECONDS_TO_SECONDS);
         for(int i = 0; i < (amount * 2); i += 2)
         {
             _softphones.at(i)->call(*_softphones.at(i + 1));
-            pj_thread_sleep(TEST_SLEEP_DURATION * MILLISECONDS_TO_SECONDS);
+            // while(!_softphones.at(i+1)->isActive())
+            // {
+            //     if(_softphones.at(i)->getState() == PJSIP_INV_STATE_DISCONNECTED)
+            //         _softphones.at(i)->call(*_softphones.at(i + 1));
+            // }
         }
         pj_thread_sleep(TEST_SLEEP_DURATION * MILLISECONDS_TO_SECONDS);
         for(int i = 0; i < (amount * 2); i += 2)
         {
             _softphones.at(i)->hangup();
+            // _endpoint.hangupAllCalls();
         }
     }
 
@@ -73,16 +81,17 @@ private:
         args.secret = "12345678";
         args.timeout = 5000;
 
+        _softphones.reserve(amount);
+
         for(int i = 0; i < amount; i++)
         {
             args.id = std::to_string(i + START_URI);
             _softphones.emplace_back(std::make_shared<Softphone>(args));
-            pj_thread_sleep(TEST_SLEEP_DURATION * MILLISECONDS_TO_SECONDS);
         }
     }
 
     static constexpr int MILLISECONDS_TO_SECONDS = 1000;
-    static constexpr int TEST_SLEEP_DURATION = 1;
+    static constexpr int TEST_SLEEP_DURATION = 10;
     static constexpr int START_URI = 1000;
 
     const int _port;

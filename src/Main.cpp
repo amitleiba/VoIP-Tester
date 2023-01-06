@@ -1,14 +1,11 @@
 #include<iostream>
+#include<string>
 
-#include<pjsua2.hpp>
-
-#include<boost/asio.hpp>
-
+#include"tester/ssp/SoftphoneManager.hpp"
 
 int main(){
-    std::cout<<"Hi" << std::endl;
+    SoftphoneManager manager(5060, "192.168.132.93");
 
-    pj::Endpoint ep;
-
-    boost::asio::io_context i;
+    manager.pjLibraryInit(0);
+    manager.runSpamTest(100);
 }

@@ -59,17 +59,11 @@ public:
         for(int i = 0; i < (amount * 2); i += 2)
         {
             _softphones.at(i)->call(*_softphones.at(i + 1));
-            // while(!_softphones.at(i+1)->isActive())
-            // {
-            //     if(_softphones.at(i)->getState() == PJSIP_INV_STATE_DISCONNECTED)
-            //         _softphones.at(i)->call(*_softphones.at(i + 1));
-            // }
         }
         pj_thread_sleep(TEST_SLEEP_DURATION * MILLISECONDS_TO_SECONDS);
         for(int i = 0; i < (amount * 2); i += 2)
         {
             _softphones.at(i)->hangup();
-            // _endpoint.hangupAllCalls();
         }
     }
 

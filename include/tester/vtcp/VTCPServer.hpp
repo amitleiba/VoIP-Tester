@@ -6,9 +6,15 @@
 
 class VTCPServer
 {
+public:
+    VTCPServer()
+    {
+        
+    }
+
+    ~VTCPServer() = default;
+
 private:
     /* data */
-public:
-    VTCPServer(/* args */);
-    ~VTCPServer();
+
 };

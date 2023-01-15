@@ -3,7 +3,7 @@
 #include<iostream>
 #include<functional>
 #include<memory>
-#include<vector>
+#include<atomic>
 
 #include<boost/asio.hpp>
 #include<boost/bind/bind.hpp>
@@ -13,8 +13,9 @@ using boost::asio::ip::tcp;
 class TCPTransmitter
 {
 public:
-    TCPTransmitter(std::shared_ptr<tcp::socket> socket):
-        _socket(socket)
+    TCPTransmitter(std::shared_ptr<tcp::socket> socket, std::shared_ptr<std::atomic<bool>> active):
+        _socket(socket),
+        _active(active)
     {
 
     }
@@ -22,9 +23,12 @@ public:
     ~TCPTransmitter()= default;
 
     void write(std::string & message) {
-	    boost::asio::async_write(_socket, boost::asio::buffer(message, message.size()),
-            boost::bind(&TCPTransmitter::onWrite, this, boost::asio::placeholders::error,
-            boost::asio::placeholders::bytes_transferred));
+        if(*_active)
+        {
+            boost::asio::async_write(_socket, boost::asio::buffer(message, message.size()),
+                boost::bind(&TCPTransmitter::onWrite, this, boost::asio::placeholders::error,
+                boost::asio::placeholders::bytes_transferred));
+        }
     }
 
 private:
@@ -44,4 +48,5 @@ private:
     }
 
     std::shared_ptr<tcp::socket> _socket;
+    std::shared_ptr<std::atomic<bool>> _active;
 };

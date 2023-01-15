@@ -3,6 +3,7 @@
 #include<iostream>
 #include<memory>
 #include<functional>
+#include<atomic>
 
 #include<boost/asio.hpp>
 
@@ -22,11 +23,12 @@ public:
         _socket(std::make_shared<tcp::socket>(std::move(socket))),
         _parser(makeParser()),
         _onMessageReceived(onMessageReceived),
-        _receiver(_socket,
+        _receiver(_socket, _active,
             std::bind(&TCPSession::onDataReceived, this, std::placeholders::_1)),
-        _transmitter(_socket)
+        _transmitter(_socket, _active)
     {
         _id = id;
+        *_active = false;
     }
 
     ~TCPSession() = default;
@@ -57,6 +59,7 @@ private:
     int _id;
 
     std::shared_ptr<tcp::socket> _socket;
+    std::shared_ptr<std::atomic<bool>> _active;
 
     std::shared_ptr<Parser> _parser;
     TCPReceiver _receiver;

@@ -15,8 +15,10 @@ class TCPReceiver
 {
 public:
     TCPReceiver(std::shared_ptr<tcp::socket> socket,
+    std::shared_ptr<std::atomic<bool>> active,
     std::function<void(const std::string &)> onDataReceived):
         _socket(socket),
+        _active(active),
         _onDataReceived(std::move(onDataReceived))
     {
         
@@ -26,22 +28,22 @@ public:
 
     void run()
     {
-        if (!_active)
+        if (!*_active)
         {
-            _active = true;
+            *_active = true;
             read();
         }
     }
 
     void stop()
     {
-        _active = false;
+        *_active = false;
         //_onClientDisconnected()?
     }
 
 private:
     void read() {
-        if (_active)
+        if (*_active)
         {
             _messageHeaderBuffer.resize(HEADER_LENGTH);
             boost::asio::async_read(_socket,
@@ -58,7 +60,7 @@ private:
             onError(ec);
             return;
         }
-        if(_active)
+        if(*_active)
         {
             _messageDataBuffer.resize(std::atoi(_messageHeaderBuffer.data()));
             boost::asio::async_read(_socket,
@@ -91,7 +93,7 @@ private:
     std::shared_ptr<tcp::socket> _socket;
     std::string _messageHeaderBuffer;
     std::string _messageDataBuffer;
-    std::atomic<bool> _active;
+    std::shared_ptr<std::atomic<bool>> _active;
 
     std::function<void(const std::string &)> _onDataReceived;
 };

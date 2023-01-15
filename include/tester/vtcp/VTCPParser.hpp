@@ -28,9 +28,8 @@ public:
 
     Message deserialize(std::string serializedMessage) override
     {
-        int messageLength = std::stoi(serializedMessage.substr(0, HEADER_LENGTH));
-        int opcode = std::stoi(serializedMessage.substr(HEADER_LENGTH, OPCODE_LENGTH));
-        std::string data = serializedMessage.substr(HEADER_LENGTH + OPCODE_LENGTH, messageLength);
+        int opcode = std::stoi(serializedMessage.substr(0, OPCODE_LENGTH));
+        std::string data = serializedMessage.substr(HEADER_LENGTH + OPCODE_LENGTH);
         return Message{opcode, data};
     }
 

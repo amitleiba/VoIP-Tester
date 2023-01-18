@@ -17,8 +17,8 @@ public:
     TCPReceiver(std::shared_ptr<tcp::socket> socket,
     std::shared_ptr<std::atomic<bool>> active,
     std::function<void(const std::string &)> onDataReceived):
-        _socket(socket),
-        _active(active),
+        _socket(std::move(socket)),
+        _active(std::move(active)),
         _onDataReceived(std::move(onDataReceived))
     {
         

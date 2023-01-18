@@ -51,7 +51,7 @@ private:
         std::cout << "*** The following exception has been thrown " << error.message() << " ***" << std::endl;
     }
 
-    int _id;
+    std::size_t _id;
     tcp::acceptor _acceptor;
     tcp::socket _placeholder;
     std::function<void(const int, tcp::socket)> _onClientConnected;

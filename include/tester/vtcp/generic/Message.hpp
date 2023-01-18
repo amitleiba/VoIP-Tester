@@ -1,23 +1,10 @@
 #pragma once
 
-// class Message
-// {
-// public:
-//     Message(/* args */)
-//     {
-
-//     }
-
-//     ~Message() = default;
-
-// private:
-//     int _opCode;
-//     std::string _data;
-
-// };
+#include<iostream>
+#include<../VTCPOpcodes.hpp>
 
 struct Message
 {
-    int opcode;
+    VTCPOpcodes opcode;
     std::string data;
 };

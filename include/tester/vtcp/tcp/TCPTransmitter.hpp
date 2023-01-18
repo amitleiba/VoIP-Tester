@@ -14,15 +14,15 @@ class TCPTransmitter
 {
 public:
     TCPTransmitter(std::shared_ptr<tcp::socket> socket, std::shared_ptr<std::atomic<bool>> active):
-        _socket(socket),
-        _active(active)
+        _socket(std::move(socket)),
+        _active(std::move(active))
     {
 
     }
     
     ~TCPTransmitter()= default;
 
-    void write(std::string & message) {
+    void write(const std::string & message) {
         if(*_active)
         {
             boost::asio::async_write(_socket, boost::asio::buffer(message, message.size()),

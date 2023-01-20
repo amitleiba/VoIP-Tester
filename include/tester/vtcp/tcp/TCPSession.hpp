@@ -22,20 +22,24 @@ public:
     std::function<void(const int, Message)> onMessageReceived) : 
         _socket(std::make_shared<tcp::socket>(std::move(socket))),
         _parser(makeParser()),
+        _active(std::make_shared<std::atomic<bool>>(false)),
         _onMessageReceived(onMessageReceived),
-        _receiver(_socket, std::make_shared<std::atomic<bool>>(_active),
+        _receiver(_socket, _active,
             std::bind(&TCPSession::onDataReceived, this, std::placeholders::_1)),
-        _transmitter(_socket, std::make_shared<std::atomic<bool>>(_active))
+        _transmitter(_socket, _active)
     {
         _id = id;
-        _active = false;
     }
 
     ~TCPSession() = default;
 
     void start()
     {
-        _receiver.run();
+        if(!*_active)
+        {
+            *_active = true;
+            _receiver.run();
+        }
     }
 
     void send(Message message)
@@ -59,7 +63,7 @@ private:
     std::size_t _id;
 
     std::shared_ptr<tcp::socket> _socket;
-    std::atomic<bool> _active;
+    std::shared_ptr<std::atomic<bool>> _active;
 
     std::shared_ptr<Parser> _parser;
     TCPReceiver _receiver;

@@ -28,11 +28,7 @@ public:
 
     void run()
     {
-        if (!*_active)
-        {
-            *_active = true;
-            read();
-        }
+        read();
     }
 
     void stop()
@@ -78,7 +74,6 @@ private:
             return; 
 		}
         _onDataReceived(_messageDataBuffer);
-        //Message _readMessage = _parser.deserialize(_readBody);
         read();
     }
 
@@ -88,7 +83,7 @@ private:
         stop();
     }
 
-    static constexpr int HEADER_LENGTH = 4;
+    static constexpr int HEADER_LENGTH = sizeof(int);
 
     std::shared_ptr<tcp::socket> _socket;
     std::string _messageHeaderBuffer;

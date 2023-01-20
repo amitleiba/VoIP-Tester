@@ -1,6 +1,5 @@
 #pragma once
 
-#include<iostream>
 #include<string>
 
 #include"Message.hpp"
@@ -19,10 +18,9 @@ public:
     virtual Message deserialize(std::string data) = 0;
 
 protected:
-    static constexpr int OPCODE_LENGTH = 4;
-    static constexpr int HEADER_LENGTH = 4;
+    static constexpr int OPCODE_LENGTH = sizeof(int);
+    static constexpr int HEADER_LENGTH = sizeof(int);
 
 private:
-
 
 };

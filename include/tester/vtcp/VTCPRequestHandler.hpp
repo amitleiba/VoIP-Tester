@@ -5,7 +5,7 @@
 #include<memory>
 #include<unordered_map>
 
-#include"VTCPOpcodes.hpp"
+#include"VTCPOpcode.hpp"
 #include"generic/Message.hpp"
 
 class VTCPRequestHandler
@@ -13,17 +13,17 @@ class VTCPRequestHandler
 public:
     VTCPRequestHandler()
     {
-        _handlers.emplace(VTCPOpcodes::ON_VTCP_CONNECT_REQUEST,std::bind(&VTCPRequestHandler::onVtcpConnectRequest, this, std::placeholders::_1));
-        _handlers.emplace(VTCPOpcodes::ON_VTCP_DISCONNECT_REQUEST,std::bind(&VTCPRequestHandler::onVtcpDisconnectRequest, this, std::placeholders::_1));
-        _handlers.emplace(VTCPOpcodes::ON_VTCP_SSP_REQUEST,std::bind(&VTCPRequestHandler::onVtcpSspRequest, this, std::placeholders::_1));
-        _handlers.emplace(VTCPOpcodes::ON_VTCP_TEST_REQUEST,std::bind(&VTCPRequestHandler::onVtcpTestRequest, this, std::placeholders::_1));
+        _handlers.emplace(VTCPOpcode::ON_VTCP_CONNECT_REQUEST,std::bind(&VTCPRequestHandler::onVtcpConnectRequest, this, std::placeholders::_1));
+        _handlers.emplace(VTCPOpcode::ON_VTCP_DISCONNECT_REQUEST,std::bind(&VTCPRequestHandler::onVtcpDisconnectRequest, this, std::placeholders::_1));
+        _handlers.emplace(VTCPOpcode::ON_VTCP_SSP_REQUEST,std::bind(&VTCPRequestHandler::onVtcpSspRequest, this, std::placeholders::_1));
+        _handlers.emplace(VTCPOpcode::ON_VTCP_TEST_REQUEST,std::bind(&VTCPRequestHandler::onVtcpTestRequest, this, std::placeholders::_1));
     }
 
     void handle(Message message)
     {
         try
         {
-            _handlers.at((VTCPOpcodes)message.opcode)(message.data);
+            _handlers.at(message.opcode)(message.data);
         }
         catch(const std::exception& e)
         {
@@ -55,5 +55,5 @@ public:
 
 
 private:
-    std::unordered_map<VTCPOpcodes, std::function<void(const std::string &)>> _handlers;
+    std::unordered_map<VTCPOpcode, std::function<void(const std::string &)>> _handlers;
 };

@@ -1,10 +1,9 @@
 #pragma once
 
-#include<iostream>
-#include<../VTCPOpcodes.hpp>
+#include<../VTCPOpcode.hpp>
 
 struct Message
 {
-    VTCPOpcodes opcode;
+    VTCPOpcode opcode;
     std::string data;
 };

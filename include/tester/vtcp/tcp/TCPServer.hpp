@@ -40,7 +40,7 @@ public:
     void onClientConnected(const std::size_t id, tcp::socket placeholder)
     {
         auto session = std::make_shared<TCPSession>(placeholder, std::bind(&TCPServer::makeParser, this));
-        _sessions.insert({id, session});
+        _sessions.emplace(id, session);
         _sessions.at(id)->start();
     }
 

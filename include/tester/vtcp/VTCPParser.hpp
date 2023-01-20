@@ -6,9 +6,9 @@
 #include<iomanip>
 
 #include"generic/Parser.hpp"
-#include"VTCPOpcodes.hpp"
+#include"VTCPOpcode.hpp"
 
-class VTCPParser : Parser
+class VTCPParser : public Parser
 {
 public:
     VTCPParser()
@@ -29,8 +29,8 @@ public:
 
     Message deserialize(std::string serializedMessage) override
     {
-        VTCPOpcodes opcode = (VTCPOpcodes)std::stoi(serializedMessage.substr(0, OPCODE_LENGTH));
-        std::string data = serializedMessage.substr(HEADER_LENGTH + OPCODE_LENGTH);
+        VTCPOpcode opcode = (VTCPOpcode)std::stoi(serializedMessage.substr(0, OPCODE_LENGTH));
+        std::string data = serializedMessage.substr(OPCODE_LENGTH);
         return Message{opcode, data};
     }
 

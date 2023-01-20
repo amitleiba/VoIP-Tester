@@ -7,6 +7,7 @@
 
 #include"generic/Parser.hpp"
 #include"VTCPOpcode.hpp"
+#include"VTCPMessage.hpp"
 
 class VTCPParser : public Parser
 {
@@ -18,20 +19,21 @@ public:
 
     ~VTCPParser() = default;
 
-    std::string serialize(Message message) override
+    std::string serialize(std::shared_ptr<Message> message) override
     {
+        auto vtcpMessage = std::dynamic_pointer_cast<VTCPMessage>(message);
         std::stringstream ss;
-        ss << std::setw(HEADER_LENGTH) << std::setfill('0') << message.data.length();
-        ss << std::setw(OPCODE_LENGTH) << std::setfill('0') << (int)message.opcode;
-        std::string serializedMessage = ss.str() + message.data;
+        ss << std::setw(VTCPMessage::HEADER_LENGTH) << std::setfill('0') << vtcpMessage->getData().length();
+        ss << std::setw(VTCPMessage::OPCODE_LENGTH) << std::setfill('0') << (int)vtcpMessage->getOpcode();
+        std::string serializedMessage = ss.str() + vtcpMessage->getData();
         return serializedMessage;
     }
 
-    Message deserialize(std::string serializedMessage) override
+    std::shared_ptr<Message> deserialize(std::string serializedMessage) override
     {
-        VTCPOpcode opcode = (VTCPOpcode)std::stoi(serializedMessage.substr(0, OPCODE_LENGTH));
-        std::string data = serializedMessage.substr(OPCODE_LENGTH);
-        return Message{opcode, data};
+        VTCPOpcode opcode = (VTCPOpcode)std::stoi(serializedMessage.substr(0, VTCPMessage::OPCODE_LENGTH));
+        std::string data = serializedMessage.substr(VTCPMessage::OPCODE_LENGTH);
+        return std::make_shared<VTCPMessage>(data, opcode);
     }
 
 private:

@@ -41,9 +41,9 @@ private:
     void read() {
         if (*_active)
         {
-            _messageHeaderBuffer.resize(HEADER_LENGTH);
+            _messageHeaderBuffer.resize(Message::HEADER_LENGTH);
             boost::asio::async_read(_socket,
-                boost::asio::buffer(_messageHeaderBuffer, HEADER_LENGTH),
+                boost::asio::buffer(_messageHeaderBuffer, Message::HEADER_LENGTH),
                 boost::bind(&TCPReceiver::onReadHeader, this, boost::asio::placeholders::error,
                 boost::asio::placeholders::bytes_transferred));
         }    
@@ -58,9 +58,10 @@ private:
         }
         if(*_active)
         {
-            _messageDataBuffer.resize(std::atoi(_messageHeaderBuffer.data()));
+            std::size_t data_size = std::atoi(_messageHeaderBuffer.data());
+            _messageDataBuffer.resize(data_size);
             boost::asio::async_read(_socket,
-                boost::asio::buffer(_messageDataBuffer, HEADER_LENGTH),
+                boost::asio::buffer(_messageDataBuffer, data_size),
                 boost::bind(&TCPReceiver::onReadData, this, boost::asio::placeholders::error,
                 boost::asio::placeholders::bytes_transferred));
         }
@@ -82,9 +83,7 @@ private:
         std::cout << "*** The following exception has been thrown " << error.message() << " ***" << std::endl;
         stop();
     }
-
-    static constexpr int HEADER_LENGTH = sizeof(int);
-
+    
     std::shared_ptr<tcp::socket> _socket;
     std::string _messageHeaderBuffer;
     std::string _messageDataBuffer;

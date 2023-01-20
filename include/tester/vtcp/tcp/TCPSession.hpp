@@ -19,7 +19,7 @@ class TCPSession
 public:
     TCPSession(tcp::socket socket, const int id,
     std::function<std::shared_ptr<Parser>()> makeParser,
-    std::function<void(const int, Message)> onMessageReceived) : 
+    std::function<void(const int, std::shared_ptr<Message>)> onMessageReceived) : 
         _socket(std::make_shared<tcp::socket>(std::move(socket))),
         _parser(makeParser()),
         _active(std::make_shared<std::atomic<bool>>(false)),
@@ -44,14 +44,14 @@ public:
 
     void send(Message message)
     {
-        std::string serializedMessage = _parser->serialize(message);
+        std::string serializedMessage = _parser->serialize(std::make_shared<Message>(message));
         _transmitter.write(serializedMessage);
     }
 
 private:
     void onDataReceived(const std::string & data)
     {
-        Message message = _parser->deserialize(data);
+        auto message = _parser->deserialize(data);
         _onMessageReceived(_id, message);
     }
 
@@ -69,5 +69,5 @@ private:
     TCPReceiver _receiver;
     TCPTransmitter _transmitter;
 
-    std::function<void(const int, Message)> _onMessageReceived;
+    std::function<void(const int, std::shared_ptr<Message>)> _onMessageReceived;
 };

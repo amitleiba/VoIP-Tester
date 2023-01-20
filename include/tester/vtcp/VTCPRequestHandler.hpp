@@ -19,11 +19,11 @@ public:
         _handlers.emplace(VTCPOpcode::ON_VTCP_TEST_REQUEST,std::bind(&VTCPRequestHandler::onVtcpTestRequest, this, std::placeholders::_1));
     }
 
-    void handle(Message message)
+    void handle(std::shared_ptr<VTCPMessage> message)
     {
         try
         {
-            _handlers.at(message.opcode)(message.data);
+            _handlers.at(message->getOpcode())(message->getData());
         }
         catch(const std::exception& e)
         {

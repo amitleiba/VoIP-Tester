@@ -1,6 +1,7 @@
 #pragma once
 
 #include<string>
+#include<memory>
 
 #include"Message.hpp"
 
@@ -14,12 +15,10 @@ public:
 
     ~Parser() = default;
 
-    virtual std::string serialize(Message message) =  0;
-    virtual Message deserialize(std::string data) = 0;
+    virtual std::string serialize(std::shared_ptr<Message> message) =  0;
+    virtual std::shared_ptr<Message> deserialize(std::string data) = 0;
 
 protected:
-    static constexpr int OPCODE_LENGTH = sizeof(int);
-    static constexpr int HEADER_LENGTH = sizeof(int);
 
 private:
 

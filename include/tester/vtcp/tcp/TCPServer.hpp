@@ -44,7 +44,7 @@ public:
         _sessions.at(id)->start();
     }
 
-    virtual void onMessageReceived(const int, Message) = 0;
+    virtual void onMessageReceived(const int, std::shared_ptr<Message>) = 0;
 
     virtual std::shared_ptr<Parser> makeParser() = 0;
 

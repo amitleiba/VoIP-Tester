@@ -1,7 +1,5 @@
 #pragma once
 
-#include <iostream>
-
 #include<boost/asio.hpp>
 
 #include"VTCPParser.hpp"
@@ -9,7 +7,7 @@
 #include"tcp/TCPServer.hpp"
 #include"generic/Parser.hpp"
 
-class VTCPServer : TCPServer
+class VTCPServer : public TCPServer
 {
 public:
     VTCPServer(const int port) :
@@ -24,12 +22,13 @@ private:
 
     std::shared_ptr<Parser> makeParser() override
     {
-        return std::static_pointer_cast<Parser>(std::make_shared<VTCPParser>());
+        return std::make_shared<VTCPParser>();
     }
 
-    void onMessageReceived(const int id, Message message) override
+    void onMessageReceived(const int id, std::shared_ptr<Message> message) override
     {
-        _handler.handle(message);
+        auto vtcpMessage = std::dynamic_pointer_cast<VTCPMessage>(message);
+        _handler.handle(vtcpMessage);
         onCompletion(id);
     }
 

@@ -25,8 +25,10 @@ public:
         _active(std::make_shared<std::atomic<bool>>(false)),
         _onMessageReceived(onMessageReceived),
         _receiver(_socket, _active,
-            std::bind(&TCPSession::onDataReceived, this, std::placeholders::_1)),
-        _transmitter(_socket, _active)
+            std::bind(&TCPSession::onDataReceived, this, std::placeholders::_1),
+            std::bind(&TCPSession::onDisconnect, this)),
+        _transmitter(_socket, _active,
+            std::bind(&TCPSession::onDisconnect, this))
     {
         _id = id;
     }
@@ -55,9 +57,9 @@ private:
         _onMessageReceived(_id, message);
     }
 
-    void  onClientDisconnected()
+    void  onDisconnect()
     {
-        _receiver.stop();
+        *_active = false;
     }
 
     std::size_t _id;

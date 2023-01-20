@@ -16,10 +16,12 @@ class TCPReceiver
 public:
     TCPReceiver(std::shared_ptr<tcp::socket> socket,
     std::shared_ptr<std::atomic<bool>> active,
-    std::function<void(const std::string &)> onDataReceived):
+    std::function<void(const std::string &)> onDataReceived,
+    std::function<void()> onDisconnect):
         _socket(std::move(socket)),
         _active(std::move(active)),
-        _onDataReceived(std::move(onDataReceived))
+        _onDataReceived(std::move(onDataReceived)),
+        _onDisconnect(std::move(onDisconnect))
     {
         
     }
@@ -29,12 +31,6 @@ public:
     void run()
     {
         read();
-    }
-
-    void stop()
-    {
-        *_active = false;
-        //_onClientDisconnected()?
     }
 
 private:
@@ -81,7 +77,7 @@ private:
     void onError(const boost::system::error_code &error)
     {
         std::cout << "*** The following exception has been thrown " << error.message() << " ***" << std::endl;
-        stop();
+        _onDisconnect();
     }
     
     std::shared_ptr<tcp::socket> _socket;
@@ -90,4 +86,5 @@ private:
     std::shared_ptr<std::atomic<bool>> _active;
 
     std::function<void(const std::string &)> _onDataReceived;
+    std::function<void()> _onDisconnect;
 };

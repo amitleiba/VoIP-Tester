@@ -20,7 +20,7 @@ public:
 
     std::string serialize(std::shared_ptr<Message> message) override
     {
-        auto vtcpMessage = std::dynamic_pointer_cast<VTCPMessage>(message);
+        auto vtcpMessage = std::static_pointer_cast<VTCPMessage>(message);
         std::stringstream ss;
         ss << std::setw(VTCPMessage::HEADER_LENGTH) << std::setfill('0') << vtcpMessage->getData().length();
         ss << std::setw(VTCPMessage::OPCODE_LENGTH) << std::setfill('0') << (int)vtcpMessage->getOpcode();

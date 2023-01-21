@@ -24,7 +24,7 @@ public:
     {
         try
         {
-            auto vtcpMessage = std::dynamic_pointer_cast<VTCPMessage>(message);
+            auto vtcpMessage = std::static_pointer_cast<VTCPMessage>(message);
             _handlers.at(vtcpMessage->getOpcode())(vtcpMessage->getData());
         }
         catch(const std::exception& e)

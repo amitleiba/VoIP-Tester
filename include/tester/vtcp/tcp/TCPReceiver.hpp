@@ -9,6 +9,8 @@
 #include<boost/asio.hpp>
 #include<boost/bind/bind.hpp>
 
+#include"../generic/Message.hpp"
+
 using boost::asio::ip::tcp;
 
 class TCPReceiver
@@ -35,14 +37,16 @@ public:
 
 private:
     void read() {
-        if (*_active)
+        if (!*_active)
         {
-            _messageHeaderBuffer.resize(Message::HEADER_LENGTH);
-            boost::asio::async_read(_socket,
-                boost::asio::buffer(_messageHeaderBuffer, Message::HEADER_LENGTH),
-                boost::bind(&TCPReceiver::onReadHeader, this, boost::asio::placeholders::error,
-                boost::asio::placeholders::bytes_transferred));
-        }    
+            return;
+        }
+
+        _messageHeaderBuffer.resize(Message::HEADER_LENGTH);
+        boost::asio::async_read(_socket,
+            boost::asio::buffer(_messageHeaderBuffer, Message::HEADER_LENGTH),
+            boost::bind(&TCPReceiver::onReadHeader, this, boost::asio::placeholders::error,
+            boost::asio::placeholders::bytes_transferred));
     }
 
     void onReadHeader(boost::system::error_code ec, size_t bytesTransferred)
@@ -52,15 +56,17 @@ private:
             onError(ec);
             return;
         }
-        if(*_active)
+        if (!*_active)
         {
-            std::size_t data_size = std::atoi(_messageHeaderBuffer.data());
-            _messageDataBuffer.resize(data_size);
-            boost::asio::async_read(_socket,
-                boost::asio::buffer(_messageDataBuffer, data_size),
-                boost::bind(&TCPReceiver::onReadData, this, boost::asio::placeholders::error,
-                boost::asio::placeholders::bytes_transferred));
+            return;
         }
+
+        std::size_t data_size = std::atoi(_messageHeaderBuffer.data());
+        _messageDataBuffer.resize(data_size);
+        boost::asio::async_read(_socket,
+            boost::asio::buffer(_messageDataBuffer, data_size),
+            boost::bind(&TCPReceiver::onReadData, this, boost::asio::placeholders::error,
+            boost::asio::placeholders::bytes_transferred));
     }
 
     void onReadData(const boost::system::error_code & ec, size_t bytesTransferred)

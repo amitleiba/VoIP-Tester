@@ -26,12 +26,14 @@ public:
     ~TCPTransmitter()= default;
 
     void write(const std::string & message) {
-        if(*_active)
+        if (!*_active)
         {
-            boost::asio::async_write(_socket, boost::asio::buffer(message, message.size()),
-                boost::bind(&TCPTransmitter::onWrite, this, boost::asio::placeholders::error,
-                boost::asio::placeholders::bytes_transferred));
+            return;
         }
+
+        boost::asio::async_write(_socket, boost::asio::buffer(message, message.size()),
+            boost::bind(&TCPTransmitter::onWrite, this, boost::asio::placeholders::error,
+            boost::asio::placeholders::bytes_transferred));
     }
 
 private:

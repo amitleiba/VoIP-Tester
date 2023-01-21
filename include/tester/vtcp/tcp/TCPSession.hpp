@@ -44,9 +44,9 @@ public:
         }
     }
 
-    void send(Message message)
+    void send(std::shared_ptr<Message> message)
     {
-        std::string serializedMessage = _parser->serialize(std::make_shared<Message>(message));
+        std::string serializedMessage = _parser->serialize(message);
         _transmitter.write(serializedMessage);
     }
 

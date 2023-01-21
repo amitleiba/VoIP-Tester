@@ -8,6 +8,8 @@
 class VTCPMessage : public Message
 {
 public:
+    static constexpr int OPCODE_LENGTH = sizeof(int);
+
     VTCPMessage():
         Message()
     {

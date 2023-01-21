@@ -37,10 +37,15 @@ public:
             throw e;
         }
     }
-    
+
+protected:
     virtual std::shared_ptr<Parser> makeParser() = 0;
 
     virtual std::shared_ptr<RequestHandler> makeRequestHandler() = 0;
+    
+    boost::asio::io_context _context;
+
+    std::unordered_map<int , std::shared_ptr<TCPSession>> _sessions;
 
 private:
     void onClientConnected(const std::size_t id, tcp::socket placeholder)
@@ -56,9 +61,7 @@ private:
         _requestHandler->handle(message);
     }
 
-    boost::asio::io_context _context;
     TCPListener _listener;
 
-    std::unordered_map<int , std::shared_ptr<TCPSession>> _sessions;
     std::shared_ptr<RequestHandler> _requestHandler;
 };

@@ -43,7 +43,7 @@ private:
         }
 
         _messageHeaderBuffer.resize(Message::HEADER_LENGTH);
-        boost::asio::async_read(_socket,
+        boost::asio::async_read(*_socket,
             boost::asio::buffer(_messageHeaderBuffer, Message::HEADER_LENGTH),
             boost::bind(&TCPReceiver::onReadHeader, this, boost::asio::placeholders::error,
             boost::asio::placeholders::bytes_transferred));
@@ -63,7 +63,7 @@ private:
 
         std::size_t data_size = std::atoi(_messageHeaderBuffer.data());
         _messageDataBuffer.resize(data_size);
-        boost::asio::async_read(_socket,
+        boost::asio::async_read(*_socket,
             boost::asio::buffer(_messageDataBuffer, data_size),
             boost::bind(&TCPReceiver::onReadData, this, boost::asio::placeholders::error,
             boost::asio::placeholders::bytes_transferred));

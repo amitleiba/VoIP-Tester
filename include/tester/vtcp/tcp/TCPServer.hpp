@@ -16,10 +16,10 @@ using boost::asio::ip::tcp;
 class TCPServer
 {
 public:
-    TCPServer(const int port) :
+    TCPServer(const int port, std::shared_ptr<RequestHandler> requestHandler) :
         _listener(port, _context,
         std::bind(&TCPServer::onClientConnected, this, std::placeholders::_1, std::placeholders::_2)),
-        _requestHandler(makeRequestHandler())
+        _requestHandler(std::move(requestHandler))
     {
     }
 
@@ -40,17 +40,15 @@ public:
 
 protected:
     virtual std::shared_ptr<Parser> makeParser() = 0;
-
-    virtual std::shared_ptr<RequestHandler> makeRequestHandler() = 0;
     
     boost::asio::io_context _context;
 
     std::unordered_map<int , std::shared_ptr<TCPSession>> _sessions;
 
 private:
-    void onClientConnected(const std::size_t id, tcp::socket placeholder)
+    void onClientConnected(const std::size_t id, tcp::socket socket)
     {
-        auto session = std::make_shared<TCPSession>(placeholder, id, makeParser(),
+        auto session = std::make_shared<TCPSession>(std::move(socket), id, makeParser(),
             std::bind(&TCPServer::onMessageReceived, this, std::placeholders::_1, std::placeholders::_2));
         _sessions.emplace(id, session);
         _sessions.at(id)->start();

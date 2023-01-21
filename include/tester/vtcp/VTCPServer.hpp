@@ -8,7 +8,7 @@ class VTCPServer : public TCPServer
 {
 public:
     VTCPServer(const int port) :
-        TCPServer(port)
+        TCPServer(port, std::make_shared<VTCPRequestHandler>())
     {
         
     }
@@ -20,10 +20,4 @@ private:
     {
         return std::make_shared<VTCPParser>();
     }
-
-    std::shared_ptr<RequestHandler> makeRequestHandler() override
-    {
-        return std::make_shared<VTCPRequestHandler>();
-    }
-    
 };

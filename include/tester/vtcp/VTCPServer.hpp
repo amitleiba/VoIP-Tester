@@ -1,11 +1,8 @@
 #pragma once
 
-#include<boost/asio.hpp>
-
 #include"VTCPParser.hpp"
 #include"VTCPRequestHandler.hpp"
 #include"tcp/TCPServer.hpp"
-#include"generic/Parser.hpp"
 
 class VTCPServer : public TCPServer
 {

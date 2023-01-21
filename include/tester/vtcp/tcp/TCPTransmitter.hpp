@@ -4,6 +4,7 @@
 #include<functional>
 #include<memory>
 #include<atomic>
+#include<string>
 
 #include<boost/asio.hpp>
 #include<boost/bind/bind.hpp>

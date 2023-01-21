@@ -1,9 +1,9 @@
 #pragma once
 
-#include<iostream>
 #include<memory>
 #include<functional>
 #include<atomic>
+#include<string>
 
 #include<boost/asio.hpp>
 

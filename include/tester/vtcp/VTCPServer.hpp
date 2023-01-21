@@ -19,25 +19,14 @@ public:
     ~VTCPServer() = default;
 
 private:
-
     std::shared_ptr<Parser> makeParser() override
     {
         return std::make_shared<VTCPParser>();
     }
 
-    void onMessageReceived(const int id, std::shared_ptr<Message> message) override
+    std::shared_ptr<RequestHandler> makeRequestHandler() override
     {
-        auto vtcpMessage = std::dynamic_pointer_cast<VTCPMessage>(message);
-        _handler.handle(vtcpMessage);
-        onCompletion(id);
+        return std::make_shared<VTCPRequestHandler>();
     }
-
-    void onCompletion(const int id) override
-    {
-        std::cout << "Done" << std::endl;
-        //maybe send something to the client?
-        //_sessions.at(id)->send(message)
-    }
-
-    VTCPRequestHandler _handler;
+    
 };

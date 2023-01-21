@@ -17,10 +17,10 @@ class TCPServer
 {
 public:
     TCPServer(const int port) :
-        _listener(port, _io_context,
-        std::bind(&TCPServer::onClientConnected, this, std::placeholders::_1, std::placeholders::_2))
+        _listener(port, _context,
+        std::bind(&TCPServer::onClientConnected, this, std::placeholders::_1, std::placeholders::_2)),
+        _requestHandler(makeRequestHandler())
     {
-        _handler = makeRequestHandler();
     }
 
     ~TCPServer() = default;
@@ -28,7 +28,7 @@ public:
     void start()
     {
         try {
-            _io_context.run();
+            _context.run();
             _listener.run();
         }
         catch (std::exception& e)
@@ -37,37 +37,28 @@ public:
             throw e;
         }
     }
+    
+    virtual std::shared_ptr<Parser> makeParser() = 0;
 
+    virtual std::shared_ptr<RequestHandler> makeRequestHandler() = 0;
+
+private:
     void onClientConnected(const std::size_t id, tcp::socket placeholder)
     {
-        auto session = std::make_shared<TCPSession>(placeholder, std::bind(&TCPServer::makeParser, this));
+        auto session = std::make_shared<TCPSession>(placeholder, id, makeParser(),
+            std::bind(&TCPServer::onMessageReceived, this, std::placeholders::_1, std::placeholders::_2));
         _sessions.emplace(id, session);
         _sessions.at(id)->start();
     }
 
     void onMessageReceived(const int id, std::shared_ptr<Message> message) 
     {
-        _handler->handle(message);
-        onCompletion(id);
+        _requestHandler->handle(message);
     }
 
-    void onCompletion(const int id)
-    {
-        std::cout << "Done" << std::endl;
-        //maybe send something to the client?
-        //_sessions.at(id)->send(message)
-    }
-    
-    virtual std::shared_ptr<Parser> makeParser() = 0;
-
-    virtual std::shared_ptr<RequestHandler> makeRequestHandler() = 0;
-
-protected:
-    boost::asio::io_context _io_context;
-    std::unordered_map<int , std::shared_ptr<TCPSession>> _sessions;
+    boost::asio::io_context _context;
     TCPListener _listener;
-    std::shared_ptr<RequestHandler> _handler;
 
-private:
-    
+    std::unordered_map<int , std::shared_ptr<TCPSession>> _sessions;
+    std::shared_ptr<RequestHandler> _requestHandler;
 };

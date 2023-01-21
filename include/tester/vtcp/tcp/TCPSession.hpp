@@ -18,10 +18,10 @@ class TCPSession
 {
 public:
     TCPSession(tcp::socket socket, const int id,
-    std::function<std::shared_ptr<Parser>()> makeParser,
+    std::shared_ptr<Parser> parser,
     std::function<void(const int, std::shared_ptr<Message>)> onMessageReceived) : 
         _socket(std::make_shared<tcp::socket>(std::move(socket))),
-        _parser(makeParser()),
+        _parser(std::move(parser)),
         _active(std::make_shared<std::atomic<bool>>(false)),
         _onMessageReceived(onMessageReceived),
         _receiver(_socket, _active,

@@ -7,17 +7,9 @@
 class RequestHandler
 {
 public:
-    RequestHandler()
-    {
+    RequestHandler() = default;
 
-    }
-
-    ~RequestHandler() = default;
+    virtual ~RequestHandler() = 0;
 
     virtual void handle(std::shared_ptr<Message> message) = 0;
-
-protected:
-
-private:
-
 };

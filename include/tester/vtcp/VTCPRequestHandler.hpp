@@ -14,10 +14,10 @@ public:
     VTCPRequestHandler():
         RequestHandler()
     {
-        _handlers.emplace(VTCPOpcode::ON_VTCP_CONNECT_REQUEST,std::bind(&VTCPRequestHandler::onVtcpConnectRequest, this, std::placeholders::_1));
-        _handlers.emplace(VTCPOpcode::ON_VTCP_DISCONNECT_REQUEST,std::bind(&VTCPRequestHandler::onVtcpDisconnectRequest, this, std::placeholders::_1));
-        _handlers.emplace(VTCPOpcode::ON_VTCP_SSP_REQUEST,std::bind(&VTCPRequestHandler::onVtcpSspRequest, this, std::placeholders::_1));
-        _handlers.emplace(VTCPOpcode::ON_VTCP_TEST_REQUEST,std::bind(&VTCPRequestHandler::onVtcpTestRequest, this, std::placeholders::_1));
+        _handlers.emplace(VTCPOpcode::VTCP_CONNECT,std::bind(&VTCPRequestHandler::onVtcpConnectRequest, this, std::placeholders::_1));
+        _handlers.emplace(VTCPOpcode::VTCP_DISCONNECT,std::bind(&VTCPRequestHandler::onVtcpDisconnectRequest, this, std::placeholders::_1));
+        _handlers.emplace(VTCPOpcode::VTCP_MANUAL_TEST,std::bind(&VTCPRequestHandler::onVtcpSspRequest, this, std::placeholders::_1));
+        _handlers.emplace(VTCPOpcode::VTCP_AUTO_TEST,std::bind(&VTCPRequestHandler::onVtcpTestRequest, this, std::placeholders::_1));
     }
 
     void handle(std::shared_ptr<Message> message) override

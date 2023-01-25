@@ -61,7 +61,7 @@ private:
             return;
         }
 
-        std::size_t data_size = std::atoi(_messageHeaderBuffer.data());
+        std::size_t data_size = std::stoi(_messageHeaderBuffer);
         _messageDataBuffer.resize(data_size);
         boost::asio::async_read(*_socket,
             boost::asio::buffer(_messageDataBuffer, data_size),
@@ -76,6 +76,8 @@ private:
             onError(ec);
             return; 
 		}
+
+        std::cout<< "All the data received" << std::endl;
         _onDataReceived(_messageDataBuffer);
         read();
     }

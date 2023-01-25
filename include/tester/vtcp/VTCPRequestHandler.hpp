@@ -8,6 +8,8 @@
 #include"VTCPOpcode.hpp"
 #include"VTCPMessage.hpp"
 
+#include"tester/ssp/SoftphoneManager.hpp"
+
 class VTCPRequestHandler : public RequestHandler
 {
 public:
@@ -37,22 +39,41 @@ public:
 
     void onVtcpConnect(const std::string & data)
     {
-
+        std::cout << "New client connected" << std::endl;
     }
 
     void onVtcpDisconnect(const std::string & data)
     {
-
+        std::cout << "Client disconnected" << std::endl;
     }
 
     void onVtcpAutoTest(const std::string & data)
     {
+        std::cout << "Client requested Auto test" << std::endl;
         
+        std::vector<std::string> vector_data;
+        std::stringstream ss(data);
+        std::string item;
+
+        while (std::getline(ss, item, ',')) {
+            vector_data.push_back(item);
+        }
+
+        std::string domain = vector_data.at(0);
+        int amount = std::stoi(vector_data.at(1));
+
+        std::cout << "Domian: " << domain << " Amount: " << amount << std::endl; 
+
+        // SoftphoneManager manager(5060, "192.168.132.93");
+
+        // manager.pjLibraryInit(0);
+        // manager.runSpamTest(100);
     }
 
     void onVtcpManualTest(const std::string & data)
     {
-        
+        std::cout << "Client requested Manual test" << std::endl;
+        std::cout << "The amout of softphones that the client wanted" << std::stoi(data) << std::endl;
     }
 
 

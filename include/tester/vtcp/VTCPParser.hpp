@@ -22,7 +22,7 @@ public:
     {
         auto vtcpMessage = std::static_pointer_cast<VTCPMessage>(message);
         std::stringstream ss;
-        ss << std::setw(VTCPMessage::HEADER_LENGTH) << std::setfill('0') << vtcpMessage->getData().length();
+        ss << std::setw(VTCPMessage::HEADER_LENGTH) << std::setfill('0') << (vtcpMessage->getData().length() + VTCPMessage::OPCODE_LENGTH);
         ss << std::setw(VTCPMessage::OPCODE_LENGTH) << std::setfill('0') << (int)vtcpMessage->getOpcode();
         std::string serializedMessage = ss.str() + vtcpMessage->getData();
         return serializedMessage;

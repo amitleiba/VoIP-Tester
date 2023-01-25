@@ -28,8 +28,9 @@ public:
     void start()
     {
         try {
-            _context.run();
             _listener.run();
+            std::cout<<"THe server is runnig\nWaiting for clients" <<std::endl;
+            _context.run();
         }
         catch (std::exception& e)
         {

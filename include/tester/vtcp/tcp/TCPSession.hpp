@@ -9,7 +9,6 @@
 
 #include"TCPReceiver.hpp"
 #include"TCPTransmitter.hpp"
-#include"../generic/Parser.hpp"
 #include"../generic/Message.hpp"
 
 using  boost::asio::ip::tcp;
@@ -18,12 +17,12 @@ class TCPSession
 {
 public:
     TCPSession(tcp::socket socket, const int id,
-    std::shared_ptr<Parser> parser,
-    std::function<void(const int, std::shared_ptr<Message>)> onMessageReceived) : 
+    std::function<void(const int, const Message&)> onMessageReceived,
+    std::function<void(const int)> onDisconnect) : 
         _socket(std::make_shared<tcp::socket>(std::move(socket))),
-        _parser(std::move(parser)),
         _active(std::make_shared<std::atomic<bool>>(false)),
         _onMessageReceived(onMessageReceived),
+        _onDisconnect(onDisconnect),
         _receiver(_socket, _active,
             std::bind(&TCPSession::onDataReceived, this, std::placeholders::_1),
             std::bind(&TCPSession::onDisconnect, this)),
@@ -44,32 +43,33 @@ public:
         }
     }
 
-    void send(std::shared_ptr<Message> message)
+    void send(const std::vector<std::uint8_t> & message)
     {
-        std::string serializedMessage = _parser->serialize(message);
-        _transmitter.write(serializedMessage);
+        _transmitter.write(message);
+    }
+
+    void onDisconnect()
+    {
+        *_active = false;
+        _onDisconnect(_id);
     }
 
 private:
-    void onDataReceived(const std::string & data)
+    void onDataReceived(const std::vector<std::uint8_t> & data)
     {
-        auto message = _parser->deserialize(data);
-        _onMessageReceived(_id, message);
+        _onMessageReceived(_id, Message(data));
     }
 
-    void  onDisconnect()
-    {
-        *_active = false;
-    }
+    
 
     std::size_t _id;
 
     std::shared_ptr<tcp::socket> _socket;
     std::shared_ptr<std::atomic<bool>> _active;
 
-    std::shared_ptr<Parser> _parser;
     TCPReceiver _receiver;
     TCPTransmitter _transmitter;
 
-    std::function<void(const int, std::shared_ptr<Message>)> _onMessageReceived;
+    std::function<void(const int, const Message &)> _onMessageReceived;
+    std::function<void(const int)> _onDisconnect;
 };

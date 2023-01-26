@@ -6,9 +6,6 @@
 
 #include"generic/RequestHandler.hpp"
 #include"VTCPOpcode.hpp"
-#include"VTCPMessage.hpp"
-
-#include"tester/ssp/SoftphoneManager.hpp"
 
 class VTCPRequestHandler : public RequestHandler
 {
@@ -16,18 +13,18 @@ public:
     VTCPRequestHandler():
         RequestHandler()
     {
-        _handlers.emplace(VTCPOpcode::VTCP_CONNECT,std::bind(&VTCPRequestHandler::onVtcpConnect, this, std::placeholders::_1));
-        _handlers.emplace(VTCPOpcode::VTCP_DISCONNECT,std::bind(&VTCPRequestHandler::onVtcpDisconnect, this, std::placeholders::_1));
-        _handlers.emplace(VTCPOpcode::VTCP_MANUAL_TEST,std::bind(&VTCPRequestHandler::onVtcpManualTest, this, std::placeholders::_1));
-        _handlers.emplace(VTCPOpcode::VTCP_AUTO_TEST,std::bind(&VTCPRequestHandler::onVtcpAutoTest, this, std::placeholders::_1));
+        _handlers.emplace(VTCPOpcode::VTCP_CONNECT_REQ,std::bind(&VTCPRequestHandler::onVtcpConnect, this, std::placeholders::_1, std::placeholders::_2));
+        _handlers.emplace(VTCPOpcode::VTCP_DISCONNECT_REQ,std::bind(&VTCPRequestHandler::onVtcpDisconnect, this, std::placeholders::_1, std::placeholders::_2));
+        _handlers.emplace(VTCPOpcode::VTCP_MANUAL_TEST_REQ,std::bind(&VTCPRequestHandler::onVtcpManualTest, this, std::placeholders::_1, std::placeholders::_2));
+        _handlers.emplace(VTCPOpcode::VTCP_AUTO_TEST_REQ,std::bind(&VTCPRequestHandler::onVtcpAutoTest, this, std::placeholders::_1, std::placeholders::_2));
     }
 
-    void handle(std::shared_ptr<Message> message) override
+    Message handle(std::shared_ptr<TCPSession> sender, const Message& request) override
     {
         try
         {
-            auto vtcpMessage = std::static_pointer_cast<VTCPMessage>(message);
-            _handlers.at(vtcpMessage->getOpcode())(vtcpMessage->getData());
+            auto opcode = static_cast<VTCPOpcode>(request.readInteger());
+            _handlers.at(opcode)(std::move(sender), request);
         }
         catch(const std::exception& e)
         {
@@ -37,46 +34,40 @@ public:
 
     ~VTCPRequestHandler() = default;
 
-    void onVtcpConnect(const std::string & data)
+    void onVtcpConnect(std::shared_ptr<TCPSession> sender, const Message & data)
     {
         std::cout << "New client connected" << std::endl;
     }
 
-    void onVtcpDisconnect(const std::string & data)
+    void onVtcpDisconnect(std::shared_ptr<TCPSession> sender, const Message & data)
     {
         std::cout << "Client disconnected" << std::endl;
+
+        //sender->onDisconnect();
+
     }
 
-    void onVtcpAutoTest(const std::string & data)
+    void onVtcpAutoTest(std::shared_ptr<TCPSession> sender, const Message & request)
     {
         std::cout << "Client requested Auto test" << std::endl;
-        
-        std::vector<std::string> vector_data;
-        std::stringstream ss(data);
-        std::string item;
 
-        while (std::getline(ss, item, ',')) {
-            vector_data.push_back(item);
-        }
+        std::string domain = request.readString();
+        int amount = request.readInteger();
 
-        std::string domain = vector_data.at(0);
-        int amount = std::stoi(vector_data.at(1));
+        std::cout << "Domian: " << domain << " Amount: " << amount << std::endl;
 
-        std::cout << "Domian: " << domain << " Amount: " << amount << std::endl; 
-
-        // SoftphoneManager manager(5060, "192.168.132.93");
+        // SoftphoneManager manager(5060, domain);
 
         // manager.pjLibraryInit(0);
-        // manager.runSpamTest(100);
+        // manager.runSpamTest(amount);
     }
 
-    void onVtcpManualTest(const std::string & data)
+    void onVtcpManualTest(std::shared_ptr<TCPSession> sender, const Message & data)
     {
         std::cout << "Client requested Manual test" << std::endl;
-        std::cout << "The amout of softphones that the client wanted" << std::stoi(data) << std::endl;
     }
 
 
 private:
-    std::unordered_map<VTCPOpcode, std::function<void(const std::string &)>> _handlers;
+    std::unordered_map<VTCPOpcode, std::function<void(std::shared_ptr<TCPSession>, const Message &)>> _handlers;
 };

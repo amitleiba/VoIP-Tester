@@ -3,6 +3,7 @@
 #include<memory>
 
 #include"Message.hpp"
+#include"../tcp/TCPSession.hpp"
 
 class RequestHandler
 {
@@ -11,5 +12,5 @@ public:
 
     virtual ~RequestHandler() = default;
 
-    virtual void handle(std::shared_ptr<Message> message) = 0;
+    virtual Message handle(std::shared_ptr<TCPSession> sender, const Message& request) = 0;
 };

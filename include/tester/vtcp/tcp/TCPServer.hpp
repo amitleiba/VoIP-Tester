@@ -8,7 +8,6 @@
 
 #include"TCPSession.hpp"
 #include"TCPListener.hpp"
-#include"../generic/Parser.hpp"
 #include"../generic/RequestHandler.hpp"
 
 using boost::asio::ip::tcp;
@@ -39,9 +38,7 @@ public:
         }
     }
 
-protected:
-    virtual std::shared_ptr<Parser> makeParser() = 0;
-    
+protected:    
     boost::asio::io_context _context;
 
     std::unordered_map<int , std::shared_ptr<TCPSession>> _sessions;
@@ -49,15 +46,21 @@ protected:
 private:
     void onClientConnected(const std::size_t id, tcp::socket socket)
     {
-        auto session = std::make_shared<TCPSession>(std::move(socket), id, makeParser(),
-            std::bind(&TCPServer::onMessageReceived, this, std::placeholders::_1, std::placeholders::_2));
+        auto session = std::make_shared<TCPSession>(std::move(socket), id,
+            std::bind(&TCPServer::onMessageReceived, this, std::placeholders::_1, std::placeholders::_2),
+            std::bind(&TCPServer::onDisconnect, this, std::placeholders::_1));
         _sessions.emplace(id, session);
         _sessions.at(id)->start();
     }
 
-    void onMessageReceived(const int id, std::shared_ptr<Message> message) 
+    void onMessageReceived(const int id, const Message& request) 
     {
-        _requestHandler->handle(message);
+        _requestHandler->handle(_sessions.at(id), request);
+    }
+
+    void onDisconnect(const int id)
+    {
+        _sessions.erase(id);
     }
 
     TCPListener _listener;

@@ -3,7 +3,6 @@
 #include<vector>
 #include<string>
 #include<cstring>
-#include<optional>
 
 class Message
 {
@@ -34,15 +33,11 @@ public:
     std::string readString() const
     {
         auto size = readInteger();
+        if(!canRead(size))
+        {
+            throw;
+        }
         return readString(size);
-    }
-
-    std::string readString(std::size_t size) const
-    {
-        auto iterator = _payload.begin() + _index;
-        std::string value(iterator, iterator + size); 
-        _index += size;
-        return value;
     }
 
     std::uint8_t readByte() const
@@ -55,7 +50,7 @@ public:
 
     bool canRead(std::size_t size) const
     {
-        return size > 0 && _index + size < _payload.size();
+        return size > 0 && _index + size <= _payload.size();
     }
 
     void push(int integer)
@@ -70,18 +65,26 @@ public:
         _payload.insert(_payload.end(), string.begin(), string.end());
     }
 
-    std::vector<std::uint8_t> getPayload()
+    std::vector<std::uint8_t> getPayload() const
     {
         return _payload;
     }
 
-    std::size_t getIndex()
+    std::size_t getIndex() const
     {
         return _index;
     }
 
 
 private:
+
+    std::string readString(std::size_t size) const
+    {
+        auto iterator = _payload.begin() + _index;
+        std::string value(iterator, iterator + size); 
+        _index += size;
+        return value;
+    }
 
     std::vector<std::uint8_t> _payload;
     mutable std::size_t _index;

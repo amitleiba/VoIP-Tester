@@ -19,7 +19,7 @@ public:
         _handlers.emplace(VTCPOpcode::VTCP_AUTO_TEST_REQ,std::bind(&VTCPRequestHandler::onVtcpAutoTest, this, std::placeholders::_1, std::placeholders::_2));
     }
 
-    Message handle(std::shared_ptr<TCPSession> sender, const Message& request) override
+    void handle(std::shared_ptr<TCPSession> sender, const Message& request) override
     {
         try
         {

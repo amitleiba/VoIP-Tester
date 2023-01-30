@@ -12,5 +12,5 @@ public:
 
     virtual ~RequestHandler() = default;
 
-    virtual Message handle(std::shared_ptr<TCPSession> sender, const Message& request) = 0;
+    virtual void handle(std::shared_ptr<TCPSession> sender, const Message& request) = 0;
 };

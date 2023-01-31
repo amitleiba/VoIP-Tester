@@ -6,7 +6,7 @@
 class VTCPServer : public TCPServer
 {
 public:
-    VTCPServer(const int port) :
+    VTCPServer(const std::uint16_t port) :
         TCPServer(port, std::make_shared<VTCPRequestHandler>())
     {
         

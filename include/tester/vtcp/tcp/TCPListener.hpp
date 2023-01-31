@@ -12,14 +12,13 @@ class TCPListener
 {
 public:
 
-    TCPListener(int port, boost::asio::io_context & io_context,
-    std::function<void(const int, tcp::socket)> onClientConnected) :
-        _placeholder(io_context),
-        _acceptor(io_context, tcp::endpoint(tcp::v4(), port)),
+    TCPListener(const std::uint16_t port, boost::asio::io_context & context,
+    std::function<void(const std::size_t, tcp::socket)> onClientConnected) :
+        _id(0),
+        _placeholder(context),
+        _acceptor(context, tcp::endpoint(tcp::v4(), port)),
         _onClientConnected(std::move(onClientConnected))
-    {
-        _id = 0;
-    }
+    {    }
 
     ~TCPListener() = default;
 

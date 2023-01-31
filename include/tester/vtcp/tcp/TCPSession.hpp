@@ -16,9 +16,10 @@ using  boost::asio::ip::tcp;
 class TCPSession
 {
 public:
-    TCPSession(tcp::socket socket, const int id,
-    std::function<void(const int, const Message&)> onMessageReceived,
-    std::function<void(const int)> onDisconnect) : 
+    TCPSession(tcp::socket socket, const std::size_t id,
+    std::function<void(const std::size_t, const Message&)> onMessageReceived,
+    std::function<void(const std::size_t)> onDisconnect) : 
+        _id(id),
         _socket(std::make_shared<tcp::socket>(std::move(socket))),
         _active(std::make_shared<std::atomic<bool>>(false)),
         _onMessageReceived(onMessageReceived),
@@ -28,9 +29,7 @@ public:
             std::bind(&TCPSession::onDisconnect, this)),
         _transmitter(_socket, _active,
             std::bind(&TCPSession::onDisconnect, this))
-    {
-        _id = id;
-    }
+    {    }
 
     ~TCPSession() = default;
 
@@ -48,20 +47,24 @@ public:
         _transmitter.write(message);
     }
 
+    void disconnect()
+    {
+        onDisconnect();
+    }
+
+private:
     void onDisconnect()
     {
         *_active = false;
         _onDisconnect(_id);
     }
 
-private:
-    void onDataReceived(const std::vector<std::uint8_t> & data)
+    void onDataReceived(std::vector<std::uint8_t> data)
     {
         _onMessageReceived(_id, Message(data));
     }
 
     
-
     std::size_t _id;
 
     std::shared_ptr<tcp::socket> _socket;

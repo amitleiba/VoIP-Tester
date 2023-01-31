@@ -13,10 +13,10 @@ public:
     VTCPRequestHandler():
         RequestHandler()
     {
-        _handlers.emplace(VTCPOpcode::VTCP_CONNECT_REQ,std::bind(&VTCPRequestHandler::onVtcpConnect, this, std::placeholders::_1, std::placeholders::_2));
-        _handlers.emplace(VTCPOpcode::VTCP_DISCONNECT_REQ,std::bind(&VTCPRequestHandler::onVtcpDisconnect, this, std::placeholders::_1, std::placeholders::_2));
-        _handlers.emplace(VTCPOpcode::VTCP_MANUAL_TEST_REQ,std::bind(&VTCPRequestHandler::onVtcpManualTest, this, std::placeholders::_1, std::placeholders::_2));
-        _handlers.emplace(VTCPOpcode::VTCP_AUTO_TEST_REQ,std::bind(&VTCPRequestHandler::onVtcpAutoTest, this, std::placeholders::_1, std::placeholders::_2));
+        _handlers.emplace(VTCPOpcode::VTCP_CONNECT_REQ, std::bind(&VTCPRequestHandler::onVtcpConnect, this, std::placeholders::_1, std::placeholders::_2));
+        _handlers.emplace(VTCPOpcode::VTCP_DISCONNECT_REQ, std::bind(&VTCPRequestHandler::onVtcpDisconnect, this, std::placeholders::_1, std::placeholders::_2));
+        _handlers.emplace(VTCPOpcode::VTCP_AUTO_TEST_REQ, std::bind(&VTCPRequestHandler::onVtcpAutoTest, this, std::placeholders::_1, std::placeholders::_2));
+        _handlers.emplace(VTCPOpcode::VTCP_MANUAL_TEST_REQ, std::bind(&VTCPRequestHandler::onVtcpManualTest, this, std::placeholders::_1, std::placeholders::_2));
     }
 
     void handle(std::shared_ptr<TCPSession> sender, const Message& request) override
@@ -49,7 +49,7 @@ public:
     {
         std::cout << "Client disconnected" << std::endl;
 
-        //sender->onDisconnect();
+        //sender->disconnect();
     }
 
     void onVtcpAutoTest(std::shared_ptr<TCPSession> sender, const Message & request)
@@ -59,7 +59,7 @@ public:
         std::string domain = request.readString();
         int amount = request.readInteger();
 
-        std::cout << "Domian: " << domain << " Amount: " << amount << std::endl;
+        std::cout << "Domain: " << domain << " Amount: " << amount << std::endl;
 
         // SoftphoneManager manager(5060, domain);
 

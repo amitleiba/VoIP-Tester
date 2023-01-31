@@ -19,7 +19,7 @@ class TCPReceiver
 public:
     TCPReceiver(std::shared_ptr<tcp::socket> socket,
     std::shared_ptr<std::atomic<bool>> active,
-    std::function<void(const std::vector<std::uint8_t> &)> onDataReceived,
+    std::function<void(const std::vector<std::uint8_t>)> onDataReceived,
     std::function<void()> onDisconnect):
         _socket(std::move(socket)),
         _active(std::move(active)),
@@ -64,7 +64,6 @@ private:
         }
 
         std::cout<< "Header data received" << std::endl;
-        // std::size_t data_size = *reinterpret_cast<std::size_t*>(_messageHeaderBuffer.data());
         _messageDataBuffer.resize(data_size);
         boost::asio::async_read(*_socket,
             boost::asio::buffer(_messageDataBuffer, data_size),
@@ -80,8 +79,7 @@ private:
             return; 
 		}
 
-        std::cout<< "All the data received" << std::endl;
-        _onDataReceived(_messageDataBuffer);
+        _onDataReceived(std::move(_messageDataBuffer));
         read();
     }
 
@@ -90,15 +88,12 @@ private:
         std::cout << "*** The following exception has been thrown " << error.message() << " ***" << std::endl;
         _onDisconnect();
     }
-
-    static constexpr int HEADER_LENGTH = sizeof(int);
     
     std::shared_ptr<tcp::socket> _socket;
-    std::string _messageHeaderBuffer;
     int data_size;
     std::vector<std::uint8_t> _messageDataBuffer;
     std::shared_ptr<std::atomic<bool>> _active;
 
-    std::function<void(const std::vector<std::uint8_t> &)> _onDataReceived;
+    std::function<void(std::vector<std::uint8_t>)> _onDataReceived;
     std::function<void()> _onDisconnect;
 };

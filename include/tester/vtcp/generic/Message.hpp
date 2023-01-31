@@ -65,6 +65,14 @@ public:
         _payload.insert(_payload.end(), string.begin(), string.end());
     }
 
+    void push_size()
+    {
+        int size = _payload.size();
+        std::vector<uint8_t> size_bytes(sizeof(size));
+        std::memcpy(size_bytes.data(), &size, sizeof(size));
+        _payload.insert(_payload.begin(), size_bytes.begin(), size_bytes.end());
+    }
+
     std::vector<std::uint8_t> getPayload() const
     {
         return _payload;

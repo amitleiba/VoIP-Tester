@@ -37,6 +37,12 @@ public:
     void onVtcpConnect(std::shared_ptr<TCPSession> sender, const Message & data)
     {
         std::cout << "New client connected" << std::endl;
+        Message result;
+        result.push(static_cast<int>(VTCPOpcode::VTCP_CONNECT_RES));
+        std::string result_msg = "Hello new client";
+        result.push(result_msg);
+        result.push_size();
+        sender->send(result.getPayload());
     }
 
     void onVtcpDisconnect(std::shared_ptr<TCPSession> sender, const Message & data)

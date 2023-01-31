@@ -45,7 +45,7 @@ private:
             onError(ec);
             return;
         }
-        std::cout<<"Message sent";
+        std::cout << "Message sent" << std::endl;
     }
 
     void onError(const boost::system::error_code &error)

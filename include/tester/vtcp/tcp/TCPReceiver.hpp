@@ -43,9 +43,10 @@ private:
             return;
         }
 
-        _messageHeaderBuffer.resize(HEADER_LENGTH);
+        // _messageHeaderBuffer.resize(HEADER_LENGTH);
+        
         boost::asio::async_read(*_socket,
-            boost::asio::buffer(_messageHeaderBuffer, HEADER_LENGTH),
+            boost::asio::buffer(&data_size, sizeof data_size),
             boost::bind(&TCPReceiver::onReadHeader, this, boost::asio::placeholders::error,
             boost::asio::placeholders::bytes_transferred));
     }
@@ -63,7 +64,7 @@ private:
         }
 
         std::cout<< "Header data received" << std::endl;
-        std::size_t data_size = *reinterpret_cast<std::size_t*>(_messageHeaderBuffer.data());;
+        // std::size_t data_size = *reinterpret_cast<std::size_t*>(_messageHeaderBuffer.data());
         _messageDataBuffer.resize(data_size);
         boost::asio::async_read(*_socket,
             boost::asio::buffer(_messageDataBuffer, data_size),
@@ -94,6 +95,7 @@ private:
     
     std::shared_ptr<tcp::socket> _socket;
     std::string _messageHeaderBuffer;
+    int data_size;
     std::vector<std::uint8_t> _messageDataBuffer;
     std::shared_ptr<std::atomic<bool>> _active;
 

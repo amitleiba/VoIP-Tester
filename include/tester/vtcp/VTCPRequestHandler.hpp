@@ -41,7 +41,7 @@ public:
         result.push(static_cast<int>(VTCPOpcode::VTCP_CONNECT_RES));
         std::string result_msg = "Hello new client";
         result.push(result_msg);
-        result.push_size();
+        result.pushSize();
         sender->send(result.getPayload());
     }
 
@@ -50,7 +50,6 @@ public:
         std::cout << "Client disconnected" << std::endl;
 
         //sender->onDisconnect();
-
     }
 
     void onVtcpAutoTest(std::shared_ptr<TCPSession> sender, const Message & request)
@@ -72,7 +71,6 @@ public:
     {
         std::cout << "Client requested Manual test" << std::endl;
     }
-
 
 private:
     std::unordered_map<VTCPOpcode, std::function<void(std::shared_ptr<TCPSession>, const Message &)>> _handlers;

@@ -46,7 +46,7 @@ protected:
 private:
     void onClientConnected(const std::size_t id, tcp::socket socket)
     {
-        std::cout <<"New client connect" << std::endl;
+        std::cout << "New client connect" << std::endl;
         auto session = std::make_shared<TCPSession>(std::move(socket), id,
             std::bind(&TCPServer::onMessageReceived, this, std::placeholders::_1, std::placeholders::_2),
             std::bind(&TCPServer::onDisconnect, this, std::placeholders::_1));

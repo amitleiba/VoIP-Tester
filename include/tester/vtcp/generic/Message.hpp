@@ -65,7 +65,7 @@ public:
         _payload.insert(_payload.end(), string.begin(), string.end());
     }
 
-    void push_size()
+    void pushSize()
     {
         int size = _payload.size();
         std::vector<uint8_t> size_bytes(sizeof(size));

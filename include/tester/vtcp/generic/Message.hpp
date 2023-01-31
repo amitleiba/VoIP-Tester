@@ -19,7 +19,6 @@ public:
 
     ~Message() = default;
         
-    //TODO: add readInteger, readString
     int readInteger() const
     {
         if(!canRead(sizeof(int)))

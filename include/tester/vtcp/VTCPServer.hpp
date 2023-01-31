@@ -9,7 +9,6 @@ public:
     VTCPServer(const std::uint16_t port) :
         TCPServer(port, std::make_shared<VTCPRequestHandler>())
     {
-        
     }
 
     ~VTCPServer() = default;

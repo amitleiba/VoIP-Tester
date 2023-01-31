@@ -21,7 +21,6 @@ public:
         _active(std::move(active)),
         _onDisconnect(std::move(onDisconnect))
     {
-
     }
     
     ~TCPTransmitter()= default;

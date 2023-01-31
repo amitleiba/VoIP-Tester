@@ -18,7 +18,8 @@ public:
         _placeholder(context),
         _acceptor(context, tcp::endpoint(tcp::v4(), port)),
         _onClientConnected(std::move(onClientConnected))
-    {    }
+    {   
+    }
 
     ~TCPListener() = default;
 

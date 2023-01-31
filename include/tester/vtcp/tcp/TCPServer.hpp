@@ -19,7 +19,8 @@ public:
         _listener(port, _context,
         std::bind(&TCPServer::onClientConnected, this, std::placeholders::_1, std::placeholders::_2)),
         _requestHandler(std::move(requestHandler))
-    {    }
+    {
+    }
 
     ~TCPServer() = default;
 

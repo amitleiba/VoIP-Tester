@@ -19,14 +19,13 @@ class TCPReceiver
 public:
     TCPReceiver(std::shared_ptr<tcp::socket> socket,
     std::shared_ptr<std::atomic<bool>> active,
-    std::function<void(const std::vector<std::uint8_t>)> onDataReceived,
+    std::function<void(std::vector<std::uint8_t>)> onDataReceived,
     std::function<void()> onDisconnect):
         _socket(std::move(socket)),
         _active(std::move(active)),
         _onDataReceived(std::move(onDataReceived)),
         _onDisconnect(std::move(onDisconnect))
     {
-        
     }
     
     ~TCPReceiver() = default;
@@ -43,8 +42,6 @@ private:
             return;
         }
 
-        // _messageHeaderBuffer.resize(HEADER_LENGTH);
-        
         boost::asio::async_read(*_socket,
             boost::asio::buffer(&data_size, sizeof data_size),
             boost::bind(&TCPReceiver::onReadHeader, this, boost::asio::placeholders::error,

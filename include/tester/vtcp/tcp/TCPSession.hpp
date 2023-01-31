@@ -29,7 +29,8 @@ public:
             std::bind(&TCPSession::onDisconnect, this)),
         _transmitter(_socket, _active,
             std::bind(&TCPSession::onDisconnect, this))
-    {    }
+    { 
+    }
 
     ~TCPSession() = default;
 

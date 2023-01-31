@@ -49,7 +49,7 @@ public:
     {
         std::cout << "Client disconnected" << std::endl;
 
-        //sender->disconnect();
+        sender->disconnect();
     }
 
     void onVtcpAutoTest(std::shared_ptr<TCPSession> sender, const Message & request)

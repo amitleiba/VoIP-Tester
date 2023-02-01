@@ -43,9 +43,9 @@ public:
         }
     }
 
-    void send(const std::vector<std::uint8_t> & message)
+    void send(const Message & message)
     {
-        _transmitter.write(message);
+        _transmitter.write(message.getPayload());
     }
 
     void disconnect()

@@ -12,8 +12,8 @@
 
 using boost::asio::ip::tcp;
 
-template <class T>
-requires std::derived_from<T, TCPSession>
+template <typename SessionType>
+requires std::derived_from<SessionType, TCPSession>
 class TCPServer
 {
 public:
@@ -41,7 +41,7 @@ public:
 protected:    
     boost::asio::io_context _context;
 
-    std::unordered_map<std::size_t, std::shared_ptr<T>> _sessions;
+    std::unordered_map<std::size_t, std::shared_ptr<SessionType>> _sessions;
 
 private:
     void onClientConnected(const std::size_t id, tcp::socket socket)
@@ -57,7 +57,14 @@ private:
 
     void onMessageReceived(const std::size_t id, const Message& request) 
     {
-        _sessions.at(id)->handle(request);
+        try
+        {
+            _sessions.at(id)->handle(request);
+        }
+        catch(const std::exception& e)
+        {
+            std::cerr << e.what() << std::endl;
+        }
     }
 
     void onDisconnect(const std::size_t id)

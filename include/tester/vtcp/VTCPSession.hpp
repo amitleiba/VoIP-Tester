@@ -30,24 +30,24 @@ public:
         }
         catch(const std::exception& e)
         {
-            std::cout << e.what() << std::endl;
+            std::cerr << e.what() << std::endl;
         }
     }
 
     ~VTCPSession() = default;
 
-    void onVtcpConnect(const Message & data)
+    void onVtcpConnect(const Message & request)
     {
         std::cout << "New client connected" << std::endl;
-        Message result;
-        result.push(static_cast<int>(VTCPOpcode::VTCP_CONNECT_RES));
+        Message response;
+        response.push(static_cast<int>(VTCPOpcode::VTCP_CONNECT_RES));
         std::string result_msg = "Hello new client";
-        result.push(result_msg);
-        result.pushSize();
-        send(result.getPayload());
+        response.push(result_msg);
+        response.pushSize();
+        send(response);
     }
 
-    void onVtcpDisconnect(const Message & data)
+    void onVtcpDisconnect(const Message & request)
     {
         std::cout << "Client disconnected" << std::endl;
 
@@ -69,7 +69,7 @@ public:
         // manager.runSpamTest(amount);
     }
 
-    void onVtcpManualTest(const Message & data)
+    void onVtcpManualTest(const Message & request)
     {
         std::cout << "Client requested Manual test" << std::endl;
     }

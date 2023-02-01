@@ -32,7 +32,7 @@ public:
     { 
     }
 
-    ~TCPSession() = default;
+    virtual ~TCPSession() = default;
 
     void start()
     {
@@ -53,6 +53,8 @@ public:
         onDisconnect();
     }
 
+    virtual void handle(const Message& request) = 0;
+
 private:
     void onDisconnect()
     {
@@ -64,7 +66,6 @@ private:
     {
         _onMessageReceived(_id, Message(data));
     }
-
     
     std::size_t _id;
 

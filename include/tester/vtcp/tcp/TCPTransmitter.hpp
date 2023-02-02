@@ -25,7 +25,7 @@ public:
     
     ~TCPTransmitter()= default;
 
-    void write(const std::vector<std::uint8_t> message)
+    void write(const std::vector<std::uint8_t>& message)
     {
         if (!*_active)
         {

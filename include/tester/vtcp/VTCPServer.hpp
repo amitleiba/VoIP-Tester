@@ -1,14 +1,15 @@
 #pragma once
 
-#include <iostream>
+#include"VTCPSession.hpp"
+#include"tcp/TCPServer.hpp"
 
-#include<boost/asio.hpp>
-
-class VTCPServer
+class VTCPServer : public TCPServer<VTCPSession>
 {
-private:
-    /* data */
 public:
-    VTCPServer(/* args */);
-    ~VTCPServer();
+    VTCPServer(const std::uint16_t port) :
+        TCPServer(port)
+    {
+    }
+
+    ~VTCPServer() = default;
 };

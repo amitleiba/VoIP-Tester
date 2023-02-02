@@ -52,7 +52,7 @@ WFLAGS	:=
 
 #---COMPILER FLAGS--- (-I<include path>, Example: -I/usr/local/include)
 
-CFLAGS := -I$(INC_DIR) $(PJ_CXXFLAGS)
+CFLAGS := -std=c++20 -I$(INC_DIR) $(PJ_CXXFLAGS)
 
 
 #---LINKER FLAGS--- (-L<library path>, Example: -L/usr/local/lib)

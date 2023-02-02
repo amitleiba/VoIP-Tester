@@ -41,9 +41,6 @@ public:
         std::cout << "New client connected" << std::endl;
         Message response;
         response.push(static_cast<int>(VTCPOpcode::VTCP_CONNECT_RES));
-        std::string result_msg = "Hello new client";
-        response.push(result_msg);
-        response.pushSize();
         send(response);
     }
 

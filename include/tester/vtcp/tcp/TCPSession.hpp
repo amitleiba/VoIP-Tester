@@ -45,7 +45,7 @@ public:
 
     void send(const Message & message)
     {
-        _transmitter.write(message.getPayload());
+        _transmitter.write(message.getAsBytes());
     }
 
     void disconnect()

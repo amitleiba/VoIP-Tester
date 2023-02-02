@@ -63,13 +63,14 @@ public:
         push(string.size());
         _payload.insert(_payload.end(), string.begin(), string.end());
     }
-
-    void pushSize()
+    std::vector<std::uint8_t> getAsBytes() const
     {
         int size = _payload.size();
-        std::vector<uint8_t> size_bytes(sizeof(size));
-        std::memcpy(size_bytes.data(), &size, sizeof(size));
-        _payload.insert(_payload.begin(), size_bytes.begin(), size_bytes.end());
+        std::uint8_t *data = reinterpret_cast<std::uint8_t*>(&size);
+        std::vector<uint8_t> bytes;
+        bytes.insert(bytes.end(), data, data + sizeof(int));
+        bytes.insert(bytes.end(), _payload.begin(), _payload.end());
+        return bytes;
     }
 
     std::vector<std::uint8_t> getPayload() const

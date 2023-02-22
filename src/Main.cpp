@@ -1,6 +1,7 @@
 #include"tester/vtcp/VTCPServer.hpp"
 
-int main(){
+int main()
+{
     VTCPServer server(5060);
     server.start();
 }

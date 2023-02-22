@@ -1,11 +1,12 @@
 #pragma once
 
-#include<functional>
-#include<memory>
-#include<unordered_map>
+#include <functional>
+#include <memory>
+#include <unordered_map>
 
-#include"tcp/TCPSession.hpp"
-#include"VTCPOpcode.hpp"
+#include "tcp/TCPSession.hpp"
+#include "VTCPOpcode.hpp"
+#include "../db/Logger.hpp"
 
 class VTCPSession : public TCPSession
 {
@@ -39,8 +40,20 @@ public:
     void onVtcpConnect(const Message & request)
     {
         std::cout << "New client connected" << std::endl;
+        Logger log;
         Message response;
+
+        log.openLog();
+        for(int i = 0; i < 2; i++)
+        {
+            log.write("info", "Hello new client");
+            log.write("error", "How are you?");
+        }
         response.push(static_cast<int>(VTCPOpcode::VTCP_CONNECT_RES));
+
+        response.push(bsoncxx::to_json(log.closeLog().view()));
+
+        
         send(response);
     }
 

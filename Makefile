@@ -52,7 +52,7 @@ WFLAGS	:=
 
 #---COMPILER FLAGS--- (-I<include path>, Example: -I/usr/local/include)
 
-CFLAGS := -std=c++20 -I$(INC_DIR) $(PJ_CXXFLAGS)
+CFLAGS := -std=c++20 -I$(INC_DIR) $(PJ_CXXFLAGS)	-I/usr/local/include/mongocxx/v_noabi	-I/usr/local/include/bsoncxx/v_noabi
 
 
 #---LINKER FLAGS--- (-L<library path>, Example: -L/usr/local/lib)
@@ -61,7 +61,7 @@ LDFLAGS := $(PJ_LDXXFLAGS)
 
 #---LIBRARIES--- (-l<lib name>, Example: -lPcap++, -lmongocxx.so)
 
-LDLIBS := $(PJ_LDXXLIBS) `pkg-config --libs libpjproject`
+LDLIBS := $(PJ_LDXXLIBS) `pkg-config --libs libpjproject`	-lmongocxx	-lbsoncxx
 
 
 #*****END OF FLAGS*****

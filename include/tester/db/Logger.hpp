@@ -10,6 +10,8 @@
 #include "bsoncxx/builder/stream/array.hpp"
 #include "bsoncxx/json.hpp"
 
+#include "LogSeverity.hpp"
+
 class Logger
 {
 public:
@@ -32,16 +34,29 @@ public:
         }
     }
 
-    void write(const std::string &type ,const std::string &description)
+    void info(const std::string &description)
     {
-        if (_open)
-        {
-            _data << bsoncxx::builder::stream::open_document
-                << "type" << type
-                << "description-time" << getTime()
-                << "description" << description
-                << bsoncxx::builder::stream::close_document;
-        }
+        write(LogSeverity::INFO, description);
+    }
+
+    void error(const std::string &description)
+    {
+        write(LogSeverity::ERROR, description);
+    }
+
+    void critical(const std::string &description)
+    {
+        write(LogSeverity::CRITICAL, description);
+    }
+
+    void warning(const std::string &description)
+    {
+        write(LogSeverity::WARNING, description);
+    }
+
+    void debug(const std::string &description)
+    {
+        write(LogSeverity::DEBUG, description);
     }
 
     bsoncxx::builder::stream::document closeLog()
@@ -54,6 +69,18 @@ public:
     }
 
 private:
+    void write(LogSeverity type ,const std::string &description)
+    {
+        if (_open)
+        {
+            _data << bsoncxx::builder::stream::open_document
+                << "type" << convertor.at(type)
+                << "description-time" << getTime()
+                << "description" << description
+                << bsoncxx::builder::stream::close_document;
+        }
+    }
+
     std::string getDate()
     {
         auto now = std::chrono::system_clock::now();
@@ -86,4 +113,13 @@ private:
     std::atomic<bool> _open;
     bsoncxx::builder::stream::document _document;
     bsoncxx::builder::stream::array _data;
+
+    std::unordered_map <LogSeverity, std::string> convertor = 
+    {
+        {LogSeverity::INFO,"INFO"},
+        {LogSeverity::ERROR,"ERROR"},
+        {LogSeverity::CRITICAL,"CRITICAL"},
+        {LogSeverity::WARNING,"WARNING"},
+        {LogSeverity::DEBUG,"DEBUG"}
+    };
 };

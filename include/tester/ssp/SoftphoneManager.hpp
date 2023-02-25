@@ -13,14 +13,15 @@
 class SoftphoneManager
 {
 public:
-    SoftphoneManager(int port, std::string domain):
-        _port(port), _domain(std::move(domain))
+    SoftphoneManager(int port, std::string domain,
+    std::function<void()> onComplete):
+        _port(port), _domain(std::move(domain)),
+        _onComplete(onComplete)
     {
     }
 
     ~SoftphoneManager()
     {
-
         _endpoint.libDestroy();
         _softphones.clear();  //TODO
     }
@@ -54,6 +55,7 @@ public:
 
     void runSpamTest(int amount)
     {
+        // logger.openLog();
         registerSoftphones(amount * 2);
         pj_thread_sleep(TEST_SLEEP_DURATION * MILLISECONDS_TO_SECONDS);
         for(int i = 0; i < (amount * 2); i += 2)
@@ -65,6 +67,9 @@ public:
         {
             _softphones.at(i)->hangup();
         }
+        // document d = logger.closeLog();
+        //database.save(d); <-- in application
+        _onComplete();
     }
 
 private:
@@ -92,4 +97,6 @@ private:
     const std::string _domain;
     pj::Endpoint _endpoint;
     std::vector<std::shared_ptr<Softphone>> _softphones;
+
+    std::function<void()> _onComplete;
 };

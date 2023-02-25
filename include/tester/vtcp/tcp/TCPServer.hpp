@@ -17,9 +17,13 @@ requires std::derived_from<SessionType, TCPSession>
 class TCPServer
 {
 public:
-    TCPServer(const std::uint16_t port) :
+    TCPServer(const std::uint16_t port,
+    std::function<void(int)> startAutoTest,
+    std::function<void()> startManualTest) :
         _listener(port, _context,
-        std::bind(&TCPServer::onClientConnected, this, std::placeholders::_1, std::placeholders::_2))
+        std::bind(&TCPServer::onClientConnected, this, std::placeholders::_1, std::placeholders::_2)),
+        _startAutoTest(startAutoTest),
+        _startManualTest(startManualTest)
     {
     }
 
@@ -50,7 +54,8 @@ private:
             << " : " << socket.remote_endpoint().port() << std::endl;
         auto session = std::make_shared<SessionType>(std::move(socket), id,
             std::bind(&TCPServer::onMessageReceived, this, std::placeholders::_1, std::placeholders::_2),
-            std::bind(&TCPServer::onDisconnect, this, std::placeholders::_1));
+            std::bind(&TCPServer::onDisconnect, this, std::placeholders::_1),
+            _startAutoTest, _startManualTest);
         _sessions.emplace(id, std::move(session));
         _sessions.at(id)->start();
     }
@@ -73,4 +78,6 @@ private:
     }
 
     TCPListener _listener;
+    std::function<void(int)> _startAutoTest;
+    std::function<void()> _startManualTest;
 };

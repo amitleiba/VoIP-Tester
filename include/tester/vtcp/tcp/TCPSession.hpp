@@ -18,7 +18,9 @@ class TCPSession
 public:
     TCPSession(tcp::socket socket, const std::size_t id,
     std::function<void(const std::size_t, const Message&)> onMessageReceived,
-    std::function<void(const std::size_t)> onDisconnect) : 
+    std::function<void(const std::size_t)> onDisconnect,
+    std::function<void(int)> startAutoTest,
+    std::function<void()> startManualTest) : 
         _id(id),
         _socket(std::make_shared<tcp::socket>(std::move(socket))),
         _active(std::make_shared<std::atomic<bool>>(false)),
@@ -28,7 +30,9 @@ public:
             std::bind(&TCPSession::onDataReceived, this, std::placeholders::_1),
             std::bind(&TCPSession::onDisconnect, this)),
         _transmitter(_socket, _active,
-            std::bind(&TCPSession::onDisconnect, this))
+            std::bind(&TCPSession::onDisconnect, this)),
+        _startAutoTest(startAutoTest),
+        _startManualTest(startManualTest)
     { 
     }
 
@@ -54,6 +58,10 @@ public:
     }
 
     virtual void handle(const Message& request) = 0;
+
+protected:
+    std::function<void(int)> _startAutoTest;
+    std::function<void()> _startManualTest;
 
 private:
     void onDisconnect()

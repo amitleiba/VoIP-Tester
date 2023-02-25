@@ -13,8 +13,10 @@ class VTCPSession : public TCPSession
 public:
     VTCPSession(tcp::socket socket, const std::size_t id,
     std::function<void(const std::size_t, const Message&)> onMessageReceived,
-    std::function<void(const std::size_t)> onDisconnect):
-        TCPSession(std::move(socket), id, onMessageReceived, onDisconnect)
+    std::function<void(const std::size_t)> onDisconnect,
+    std::function<void(int)> startAutoTest,
+    std::function<void()> startManualTest):
+        TCPSession(std::move(socket), id, onMessageReceived, onDisconnect, startAutoTest, startManualTest)
     {
         _handlers.emplace(VTCPOpcode::VTCP_CONNECT_REQ, std::bind(&VTCPSession::onVtcpConnect, this, std::placeholders::_1));
         _handlers.emplace(VTCPOpcode::VTCP_DISCONNECT_REQ, std::bind(&VTCPSession::onVtcpDisconnect, this, std::placeholders::_1));
@@ -44,16 +46,12 @@ public:
         Message response;
 
         log.openLog();
-        for(int i = 0; i < 2; i++)
-        {
-            log.write("info", "Hello new client");
-            log.write("error", "How are you?");
-        }
-        response.push(static_cast<int>(VTCPOpcode::VTCP_CONNECT_RES));
 
+        log.info("Client connected");
+
+        response.push(static_cast<int>(VTCPOpcode::VTCP_CONNECT_RES));
         response.push(bsoncxx::to_json(log.closeLog().view()));
 
-        
         send(response);
     }
 
@@ -73,15 +71,14 @@ public:
 
         std::cout << "Domain: " << domain << " Amount: " << amount << std::endl;
 
-        // SoftphoneManager manager(5060, domain);
-
-        // manager.pjLibraryInit(0);
-        // manager.runSpamTest(amount);
+        _startAutoTest(amount);
     }
 
     void onVtcpManualTest(const Message & request)
     {
         std::cout << "Client requested Manual test" << std::endl;
+
+        _startManualTest();
     }
 
 private:

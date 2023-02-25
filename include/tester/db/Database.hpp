@@ -3,16 +3,15 @@
 #include <string>
 #include <optional>
 
+#include "mongocxx/instance.hpp"
 #include "bsoncxx/builder/stream/document.hpp"
 #include "bsoncxx/json.hpp"
 #include "bsoncxx/oid.hpp"
 #include "mongocxx/client.hpp"
 #include "mongocxx/database.hpp"
 #include "mongocxx/uri.hpp"
-#include "mongocxx/instance.hpp"
 
-
-const std::string uri_str = "mongodb://192.168.214.93:27017";
+const std::string uri_str = "mongodb://192.168.230.93:27017";
 
 class Database
 {

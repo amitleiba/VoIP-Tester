@@ -34,12 +34,14 @@ public:
         {
             _document << "creation-time" << getDate();
             _open = true;
+            std::this_thread::sleep_for(std::chrono::milliseconds(500));
         }
     }
 
 
     bsoncxx::builder::stream::document closeDocument()
     {
+        std::this_thread::sleep_for(std::chrono::milliseconds(500));
         _document << "data" << _data;
         // _document << bsoncxx::builder::stream::finalize;
         // std::cout << bsoncxx::to_json(_document.view()) << std::endl;
@@ -83,6 +85,7 @@ private:
     {
         std::lock_guard<std::mutex> lock(_startMutex);
         _active = false;
+        _cv.notify_one();
         if (_logThread.joinable())
         {
             _logThread.join();

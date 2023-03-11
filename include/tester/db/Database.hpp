@@ -26,7 +26,7 @@ public:
 
     ~Database() = default;
 
-    void save(const std::string &collaction_name ,bsoncxx::builder::stream::document document)
+    void save(const std::string &collaction_name ,const bsoncxx::builder::stream::document &document)
     {
         mongocxx::collection collection = _database[collaction_name];
         collection.insert_one(document.view());

@@ -9,5 +9,6 @@ enum class LogSeverity : int
     ERROR = 1,
     CRITICAL = 2,
     WARNING = 3,
-    DEBUG = 4
+    DEBUG = 4,
+    NOTICE = 5
 };

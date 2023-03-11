@@ -12,12 +12,13 @@
 class Softphone
 {
 public:
-    Softphone(const SoftphoneArguments & args):
+    Softphone(const SoftphoneArguments & args,  std::function<void()> onCallDisconnected):
         _account(args.id, args.domain, args.secret,
         std::bind(&Softphone::onIncomingCall, this, std::placeholders::_1),
         std::bind(&Softphone::onRegState, this, std::placeholders::_1)),
         _call(std::make_shared<SSPCall>(&_account, std::bind(&Softphone::onCallState, this,
-            std::placeholders::_1)))
+            std::placeholders::_1))),
+        _onCallDisconnected(std::move(onCallDisconnected))
     {
         _uri = SIP + args.id + SEPARATOR + args.domain;
         _account.apply();
@@ -46,6 +47,7 @@ public:
         if (ci.state == PJSIP_INV_STATE_DISCONNECTED)
         {
             clearCall();
+            _onCallDisconnected();
         }
     }
 
@@ -122,4 +124,5 @@ private:
     std::string _uri;
     SSPAccount _account;
     std::shared_ptr<SSPCall> _call;
+    std::function<void()> _onCallDisconnected;
 };

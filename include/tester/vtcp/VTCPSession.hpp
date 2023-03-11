@@ -42,17 +42,17 @@ public:
     void onVtcpConnect(const Message & request)
     {
         std::cout << "New client connected" << std::endl;
-        Logger log;
-        Message response;
+        // Logger log;
+        // Message response;
 
-        log.openLog();
+        // log.openLog();
 
-        log.info("Client connected");
+        // log.info("Client connected");
 
-        response.push(static_cast<int>(VTCPOpcode::VTCP_CONNECT_RES));
-        response.push(bsoncxx::to_json(log.closeLog().view()));
+        // response.push(static_cast<int>(VTCPOpcode::VTCP_CONNECT_RES));
+        // response.push(bsoncxx::to_json(log.closeLog().view()));
 
-        send(response);
+        // send(response);
     }
 
     void onVtcpDisconnect(const Message & request)

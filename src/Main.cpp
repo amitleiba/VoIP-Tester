@@ -1,12 +1,13 @@
-#include "../include/tester/core/Application.hpp"
+// #include "../include/tester/core/Application.hpp"
+#include "../include/tester/db/StreamLogger.hpp"
 
 int main()
 {
-    Application app;
-    
-    // Logger log;
-    // Database db("192.168.230.93");
-    // log.openLog();
-    // log.write("info","SIP REGISTER OK from 9995@127.0.0.1");
-    // db.save("Test-Logs", log.closeLog());
+    // auto app = Application::getInstance();
+    // app.init(8080, 5060, "192.168.14.93", 0, "192.168.14.93");
+    // app.run();
+    Logger::getInstance();
+    Logger::getInstance().openDocument();
+    LOG_INFO << "Hello world" << std::endl;
+    std::cout << bsoncxx::to_json(Logger::getInstance().closeDocument().view()) << std::endl;
 }

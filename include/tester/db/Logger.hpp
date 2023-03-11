@@ -5,27 +5,30 @@
 #include <chrono>
 #include <ctime>
 #include <iomanip>
+#include <thread>
+#include <queue>
+#include <iostream>
+#include <mutex>
+#include <condition_variable>
 
 #include "bsoncxx/builder/stream/document.hpp"
 #include "bsoncxx/builder/stream/array.hpp"
 #include "bsoncxx/json.hpp"
 
 #include "LogSeverity.hpp"
+#include "MessageLogger.hpp"
 
 class Logger
 {
 public:
-    Logger() :
-        _open(false),
-        _document(bsoncxx::builder::stream::document{}),
-        _data(bsoncxx::builder::stream::array{})
+    
+    static Logger& getInstance()
     {
-        
+        static Logger instance;
+        return instance;
     }
 
-    ~Logger() = default;
-
-    void openLog()
+    void openDocument()
     {
         if (!_open)
         {
@@ -34,42 +37,75 @@ public:
         }
     }
 
-    void info(const std::string &description)
-    {
-        write(LogSeverity::INFO, description);
-    }
 
-    void error(const std::string &description)
-    {
-        write(LogSeverity::ERROR, description);
-    }
-
-    void critical(const std::string &description)
-    {
-        write(LogSeverity::CRITICAL, description);
-    }
-
-    void warning(const std::string &description)
-    {
-        write(LogSeverity::WARNING, description);
-    }
-
-    void debug(const std::string &description)
-    {
-        write(LogSeverity::DEBUG, description);
-    }
-
-    bsoncxx::builder::stream::document closeLog()
+    bsoncxx::builder::stream::document closeDocument()
     {
         _document << "data" << _data;
         // _document << bsoncxx::builder::stream::finalize;
-        std::cout << bsoncxx::to_json(_document.view()) << std::endl;
+        // std::cout << bsoncxx::to_json(_document.view()) << std::endl;
         _open = false;
         return std::move(_document);
     }
 
+    void push(MessageLogger item)
+    {
+        std::unique_lock<std::mutex> lock(_mutex);
+        _logsQueue.emplace(std::move(item));
+        lock.unlock();
+        _cv.notify_one();
+    }
+
 private:
-    void write(LogSeverity type ,const std::string &description)
+    Logger() :
+        _open(false),
+        _document(bsoncxx::builder::stream::document{}),
+        _data(bsoncxx::builder::stream::array{})
+    {
+        start();
+    }
+
+    ~Logger()
+    {
+        stop();
+    }
+
+    void start()
+    {
+        std::lock_guard<std::mutex> lock(_startMutex);
+        if(!_active)
+        {
+            _active = true;
+            _logThread = std::thread(&Logger::run, this);
+        }
+    }
+
+    void stop()
+    {
+        std::lock_guard<std::mutex> lock(_startMutex);
+        _active = false;
+        if (_logThread.joinable())
+        {
+            _logThread.join();
+        }
+    }
+
+    void run()
+    {
+        while(_active)
+        {
+            std::unique_lock<std::mutex> lock(_mutex);
+            _cv.wait(lock);
+            while(!_logsQueue.empty())
+            {
+                auto item = _logsQueue.front();
+                _logsQueue.pop();
+                write(item.getSeverity(), item.getDescription());
+            }
+            lock.unlock();
+        }
+    }
+
+    void write(LogSeverity type, const std::string &description)
     {
         if (_open)
         {
@@ -110,9 +146,6 @@ private:
         return stream.str();
     }
 
-    std::atomic<bool> _open;
-    bsoncxx::builder::stream::document _document;
-    bsoncxx::builder::stream::array _data;
 
     std::unordered_map <LogSeverity, std::string> convertor = 
     {
@@ -120,6 +153,15 @@ private:
         {LogSeverity::ERROR,"ERROR"},
         {LogSeverity::CRITICAL,"CRITICAL"},
         {LogSeverity::WARNING,"WARNING"},
-        {LogSeverity::DEBUG,"DEBUG"}
+        {LogSeverity::DEBUG,"DEBUG"},
+        {LogSeverity::NOTICE,"NOTICE"}
     };
+
+    std::atomic<bool> _open, _active;
+    bsoncxx::builder::stream::document _document;
+    bsoncxx::builder::stream::array _data;
+    std::mutex _mutex, _startMutex;
+    std::condition_variable _cv;
+    std::queue<MessageLogger> _logsQueue;
+    std::thread _logThread;
 };

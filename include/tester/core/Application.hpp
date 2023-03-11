@@ -4,22 +4,20 @@
 #include <functional>
 #include <memory>
 
+#include "bsoncxx/builder/stream/document.hpp"
+
 #include "../db/Database.hpp"
 #include "../vtcp/VTCPServer.hpp"
 #include "../ssp/SoftphoneManager.hpp"
+#include "../db/Logger.hpp"
 
 class Application
 {
 public:
-    Application& getInstance()
+    static Application& getInstance()
     {
         static Application instance;
         return instance;
-    }
-
-    Application()
-    {
-
     }
 
     ~Application() = default;
@@ -27,7 +25,7 @@ public:
     void init(int server_port, int sm_port, const std::string& sm_domain, int sm_log_level, const std::string& db_domain)
     {
         _sm = std::make_shared<SoftphoneManager>(sm_port, sm_domain,
-            std::bind(&Application::onComplete, this));
+            std::bind(&Application::onCompleteTest, this, std::placeholders::_1));
         _vs = std::make_shared<VTCPServer>(server_port,
             std::bind(&Application::startAutoTest, this, std::placeholders::_1),
             std::bind(&Application::startManualTest, this));
@@ -41,6 +39,10 @@ public:
     }
 
 private:
+    Application()
+    {
+
+    }
 
     void startAutoTest(int amount)
     {
@@ -52,9 +54,9 @@ private:
 
     }
 
-    void onComplete()
+    void onCompleteTest(const bsoncxx::builder::stream::document &doc)
     {
-
+        _db->save("Test-Logs", doc);
     }
 
     std::shared_ptr<Database> _db;

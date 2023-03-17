@@ -1,13 +1,15 @@
 #pragma once
 
-#include<iostream>
-#include<string>
-#include<functional>
-#include<memory>
+#include <iostream>
+#include <string>
+#include <functional>
+#include <memory>
 
-#include"SSPAccount.hpp"
-#include"SSPCall.hpp"
-#include"SoftphoneArguments.hpp"
+#include "SSPAccount.hpp"
+#include "SSPCall.hpp"
+#include "SoftphoneArguments.hpp"
+
+#include "../db/StreamLogger.hpp"
 
 class Softphone
 {
@@ -42,6 +44,8 @@ public:
     {
         auto ci = _call->getInfo();
         PJ_UNUSED_ARG(prm);
+        LOG_INFO << "*** Call: " <<  ci.remoteUri << " [" << ci.stateText
+        << "]" << std::endl;
         std::cout << "*** Call: " <<  ci.remoteUri << " [" << ci.stateText
         << "]" << std::endl;
         if (ci.state == PJSIP_INV_STATE_DISCONNECTED)
@@ -66,6 +70,8 @@ public:
             _call = std::move(incomingCall);
             pj::CallInfo ci = _call->getInfo();
             pj::CallOpParam prm;
+            LOG_INFO << "*** Incoming Call: " <<  ci.remoteUri << " ["
+                    << ci.stateText << "]" << std::endl;
             std::cout << "*** Incoming Call: " <<  ci.remoteUri << " ["
                     << ci.stateText << "]" << std::endl;
             prm.statusCode = PJSIP_SC_OK;
@@ -92,6 +98,8 @@ public:
     void onRegState(const pj::OnRegStateParam &prm) 
     {   
         pj::AccountInfo ai = _account.getInfo();
+        LOG_INFO << (ai.regIsActive? "*** Register: code=" : "*** Unregister: code=")
+             << prm.code << std::endl;
         std::cout << (ai.regIsActive? "*** Register: code=" : "*** Unregister: code=")
              << prm.code << std::endl;
     }

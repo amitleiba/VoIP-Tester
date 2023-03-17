@@ -11,7 +11,7 @@
 #include "mongocxx/database.hpp"
 #include "mongocxx/uri.hpp"
 
-const std::string uri_str = "mongodb://192.168.230.93:27017";
+const std::string uri_str = "mongodb://192.168.1.123:27017";
 
 class Database
 {
@@ -26,7 +26,7 @@ public:
 
     ~Database() = default;
 
-    void save(const std::string &collaction_name ,const bsoncxx::builder::stream::document &document)
+    void save(const std::string &collaction_name ,const bsoncxx::document::value &document)
     {
         mongocxx::collection collection = _database[collaction_name];
         collection.insert_one(document.view());

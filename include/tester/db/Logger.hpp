@@ -39,14 +39,12 @@ public:
     }
 
 
-    bsoncxx::builder::stream::document closeDocument()
+    bsoncxx::document::value closeDocument()
     {
         std::this_thread::sleep_for(std::chrono::milliseconds(500));
-        _document << "data" << _data;
-        // _document << bsoncxx::builder::stream::finalize;
-        // std::cout << bsoncxx::to_json(_document.view()) << std::endl;
         _open = false;
-        return std::move(_document);
+        return (_document << "data" << _data << bsoncxx::builder::stream::finalize);
+        // std::cout << bsoncxx::to_json(_document.view()) << std::endl;
     }
 
     void push(MessageLogger item)

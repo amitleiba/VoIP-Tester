@@ -14,7 +14,7 @@ public:
     VTCPSession(tcp::socket socket, const std::size_t id,
     std::function<void(const std::size_t, const Message&)> onMessageReceived,
     std::function<void(const std::size_t)> onDisconnect,
-    std::function<void(int)> startAutoTest,
+    std::function<bsoncxx::document::value(int)> startAutoTest,
     std::function<void()> startManualTest):
         TCPSession(std::move(socket), id, onMessageReceived, onDisconnect, startAutoTest, startManualTest)
     {
@@ -71,7 +71,11 @@ public:
 
         std::cout << "Domain: " << domain << " Amount: " << amount << std::endl;
 
-        _startAutoTest(amount);
+        Message response;
+
+        response.push(static_cast<int>(VTCPOpcode::VTCP_AUTO_TEST_RES));
+        response.push(bsoncxx::to_json(_startAutoTest(amount).view()));
+        send(response);
     }
 
     void onVtcpManualTest(const Message & request)

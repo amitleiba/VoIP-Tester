@@ -1,11 +1,13 @@
 #pragma once
 
-#include<iostream>
-#include<string>
+#include <iostream>
+#include <string>
 
-#include<pjsua2.hpp>
+#include <pjsua2.hpp>
 
-#include"SSPCall.hpp"
+#include "SSPCall.hpp"
+
+#include "../db/StreamLogger.hpp"
 
 class SSPAccount : public pj::Account
 {
@@ -26,6 +28,8 @@ public:
 
     ~SSPAccount()
     {
+        shutdown();
+        LOG_INFO  << "*** Account " + std::to_string(getId()) +" is being deleted ***" << std::endl;
         std::cout << "*** Account " + std::to_string(getId()) +" is being deleted ***" << std::endl;        
     }
 
@@ -34,6 +38,7 @@ public:
         try{
             create(_config);
         } catch (...) {
+            LOG_ERORR << "Adding account failed" << std::endl;
             std::cerr << "Adding account failed" << std::endl;
         }
     }

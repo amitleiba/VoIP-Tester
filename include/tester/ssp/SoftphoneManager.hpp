@@ -17,10 +17,8 @@
 class SoftphoneManager
 {
 public:
-    SoftphoneManager(int port, std::string domain,
-    std::function<void(const bsoncxx::builder::stream::document &)> onComplete):
-        _port(port), _domain(std::move(domain)),
-        _onComplete(onComplete)
+    SoftphoneManager(int port, std::string domain):
+        _port(port), _domain(std::move(domain))
     {
     }
 
@@ -62,11 +60,11 @@ public:
         _cv.notify_one();
     }
 
-    void runSpamTest(int amount)
+    bsoncxx::document::value runSpamTest(int amount)
     {
         std::unique_lock<std::mutex> lock(_mutex);
         Logger::getInstance().openDocument();
-        LOG_INFO << "started run spam test" <<std::endl;
+        LOG_INFO << "started run spam test" << std::endl;
         registerSoftphones(amount * 2);
         pj_thread_sleep(TEST_SLEEP_DURATION * MILLISECONDS_TO_SECONDS);
         for(int i = 0; i < (amount * 2); i += 2)
@@ -79,9 +77,9 @@ public:
             _softphones.at(i)->hangup();
             _cv.wait(lock, [this, i](){ return !_softphones.at(i)->isActive(); });
         }
-        std::string message = "finished run spam test";
-        LOG_INFO << message << std::endl;
-        _onComplete(Logger::getInstance().closeDocument());
+        _softphones.clear();
+        LOG_INFO << "finished run spam test" << std::endl;
+        return Logger::getInstance().closeDocument();
     }
 
 private:
@@ -111,6 +109,4 @@ private:
     std::vector<std::shared_ptr<Softphone>> _softphones;
     std::mutex _mutex;
     std::condition_variable _cv;
-
-    std::function<void(const bsoncxx::builder::stream::document &)> _onComplete;
 };

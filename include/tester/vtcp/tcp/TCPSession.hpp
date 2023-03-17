@@ -1,15 +1,17 @@
 #pragma once
 
-#include<memory>
-#include<functional>
-#include<atomic>
-#include<string>
+#include <memory>
+#include <functional>
+#include <atomic>
+#include <string>
 
-#include<boost/asio.hpp>
+#include <boost/asio.hpp>
 
-#include"TCPReceiver.hpp"
-#include"TCPTransmitter.hpp"
-#include"../generic/Message.hpp"
+#include "bsoncxx/builder/stream/document.hpp"
+
+#include "TCPReceiver.hpp"
+#include "TCPTransmitter.hpp"
+#include "../generic/Message.hpp"
 
 using  boost::asio::ip::tcp;
 
@@ -19,7 +21,7 @@ public:
     TCPSession(tcp::socket socket, const std::size_t id,
     std::function<void(const std::size_t, const Message&)> onMessageReceived,
     std::function<void(const std::size_t)> onDisconnect,
-    std::function<void(int)> startAutoTest,
+    std::function<bsoncxx::document::value(int)> startAutoTest,
     std::function<void()> startManualTest) : 
         _id(id),
         _socket(std::make_shared<tcp::socket>(std::move(socket))),
@@ -60,7 +62,7 @@ public:
     virtual void handle(const Message& request) = 0;
 
 protected:
-    std::function<void(int)> _startAutoTest;
+    std::function<bsoncxx::document::value(int)> _startAutoTest;
     std::function<void()> _startManualTest;
 
 private:

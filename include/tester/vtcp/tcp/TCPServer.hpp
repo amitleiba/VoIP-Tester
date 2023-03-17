@@ -1,14 +1,16 @@
 #pragma once
 
-#include<iostream>
-#include<memory>
-#include<unordered_map>
-#include<type_traits>
+#include <iostream>
+#include <memory>
+#include <unordered_map>
+#include <type_traits>
 
-#include<boost/asio.hpp>
+#include <boost/asio.hpp>
 
-#include"TCPSession.hpp"
-#include"TCPListener.hpp"
+#include "bsoncxx/builder/stream/document.hpp"
+
+#include "TCPSession.hpp"
+#include "TCPListener.hpp"
 
 using boost::asio::ip::tcp;
 
@@ -18,7 +20,7 @@ class TCPServer
 {
 public:
     TCPServer(const std::uint16_t port,
-    std::function<void(int)> startAutoTest,
+    std::function<bsoncxx::document::value(int)> startAutoTest,
     std::function<void()> startManualTest) :
         _listener(port, _context,
         std::bind(&TCPServer::onClientConnected, this, std::placeholders::_1, std::placeholders::_2)),
@@ -78,6 +80,6 @@ private:
     }
 
     TCPListener _listener;
-    std::function<void(int)> _startAutoTest;
+    std::function<bsoncxx::document::value(int)> _startAutoTest;
     std::function<void()> _startManualTest;
 };

@@ -24,8 +24,7 @@ public:
 
     void init(int server_port, int sm_port, const std::string& sm_domain, int sm_log_level, const std::string& db_domain)
     {
-        _sm = std::make_shared<SoftphoneManager>(sm_port, sm_domain,
-            std::bind(&Application::onCompleteTest, this, std::placeholders::_1));
+        _sm = std::make_shared<SoftphoneManager>(sm_port, sm_domain);
         _vs = std::make_shared<VTCPServer>(server_port,
             std::bind(&Application::startAutoTest, this, std::placeholders::_1),
             std::bind(&Application::startManualTest, this));
@@ -44,19 +43,16 @@ private:
 
     }
 
-    void startAutoTest(int amount)
+    bsoncxx::document::value startAutoTest(int amount)
     {
-
+        auto log = _sm -> runSpamTest(amount);
+        _db->save("Test-Logs", log);
+        return log;
     }
 
     void startManualTest()
     {
 
-    }
-
-    void onCompleteTest(const bsoncxx::builder::stream::document &doc)
-    {
-        _db->save("Test-Logs", doc);
     }
 
     std::shared_ptr<Database> _db;

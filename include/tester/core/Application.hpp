@@ -27,7 +27,9 @@ public:
         _sm = std::make_shared<SoftphoneManager>(sm_port, sm_domain);
         _vs = std::make_shared<VTCPServer>(server_port,
             std::bind(&Application::startAutoTest, this, std::placeholders::_1),
-            std::bind(&Application::startManualTest, this));
+            std::bind(&Application::startManualTest, this),
+            std::bind(&Application::getHistoryHeaders, this),
+            std::bind(&Application::getHistoryLog, this, std::placeholders::_1));
         _db = std::make_shared<Database>(db_domain);
         _sm->pjLibraryInit(sm_log_level);
     }
@@ -53,6 +55,17 @@ private:
     void startManualTest()
     {
 
+    }
+
+    bsoncxx::document::value getHistoryHeaders()
+    {
+        return(_db -> getAllHeaders("Test-Logs"));
+    }
+
+    bsoncxx::document::value getHistoryLog(const std::string &doc_id)
+    {
+        auto result = _db -> getLog("Test-Logs", doc_id);
+        return result.value();
     }
 
     std::shared_ptr<Database> _db;

@@ -21,11 +21,15 @@ class TCPServer
 public:
     TCPServer(const std::uint16_t port,
     std::function<bsoncxx::document::value(int)> startAutoTest,
-    std::function<void()> startManualTest) :
+    std::function<void()> startManualTest,
+    std::function<bsoncxx::document::value()> getHistoryHeaders,
+    std::function<bsoncxx::document::value(const std::string &)> getHistoryLog) :
         _listener(port, _context,
         std::bind(&TCPServer::onClientConnected, this, std::placeholders::_1, std::placeholders::_2)),
         _startAutoTest(startAutoTest),
-        _startManualTest(startManualTest)
+        _startManualTest(startManualTest),
+        _getHistoryHeaders(getHistoryHeaders),
+        _getHistoryLog(getHistoryLog)
     {
     }
 
@@ -57,7 +61,7 @@ private:
         auto session = std::make_shared<SessionType>(std::move(socket), id,
             std::bind(&TCPServer::onMessageReceived, this, std::placeholders::_1, std::placeholders::_2),
             std::bind(&TCPServer::onDisconnect, this, std::placeholders::_1),
-            _startAutoTest, _startManualTest);
+            _startAutoTest, _startManualTest, _getHistoryHeaders, _getHistoryLog);
         _sessions.emplace(id, std::move(session));
         _sessions.at(id)->start();
     }
@@ -82,4 +86,6 @@ private:
     TCPListener _listener;
     std::function<bsoncxx::document::value(int)> _startAutoTest;
     std::function<void()> _startManualTest;
+    std::function<bsoncxx::document::value()> _getHistoryHeaders;
+    std::function<bsoncxx::document::value(const std::string &)> _getHistoryLog;
 };

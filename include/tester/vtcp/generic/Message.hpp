@@ -73,6 +73,12 @@ public:
         return bytes;
     }
 
+    std::size_t getSize() const
+    {
+        return _payload.size();
+    }
+
+
     std::vector<std::uint8_t> getPayload() const
     {
         return _payload;

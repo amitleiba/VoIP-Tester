@@ -15,20 +15,27 @@ public:
     std::function<void(const std::size_t, const Message&)> onMessageReceived,
     std::function<void(const std::size_t)> onDisconnect,
     std::function<bsoncxx::document::value(int)> startAutoTest,
-    std::function<void()> startManualTest):
-        TCPSession(std::move(socket), id, onMessageReceived, onDisconnect, startAutoTest, startManualTest)
+    std::function<void()> startManualTest,
+    std::function<bsoncxx::document::value()> getHistoryHeaders,
+    std::function<bsoncxx::document::value(const std::string &)> getHistoryLog):
+        TCPSession(std::move(socket), id, onMessageReceived, onDisconnect, startAutoTest, 
+            startManualTest, getHistoryHeaders, getHistoryLog)
     {
         _handlers.emplace(VTCPOpcode::VTCP_CONNECT_REQ, std::bind(&VTCPSession::onVtcpConnect, this, std::placeholders::_1));
         _handlers.emplace(VTCPOpcode::VTCP_DISCONNECT_REQ, std::bind(&VTCPSession::onVtcpDisconnect, this, std::placeholders::_1));
         _handlers.emplace(VTCPOpcode::VTCP_AUTO_TEST_REQ, std::bind(&VTCPSession::onVtcpAutoTest, this, std::placeholders::_1));
         _handlers.emplace(VTCPOpcode::VTCP_MANUAL_TEST_REQ, std::bind(&VTCPSession::onVtcpManualTest, this, std::placeholders::_1));
+        _handlers.emplace(VTCPOpcode::VTCP_HISTORY_HEADER_REQ, std::bind(&VTCPSession::onVtcpHistoryHeader, this, std::placeholders::_1));
+        _handlers.emplace(VTCPOpcode::VTCP_HISTORY_LOG_REQ, std::bind(&VTCPSession::onVtcpHistoryLog, this, std::placeholders::_1));
     }
 
     void handle(const Message& request) override
     {
         try
         {
-            auto opcode = static_cast<VTCPOpcode>(request.readInteger());
+            auto op = request.readInteger();
+            std::cout << op << std::endl;
+            auto opcode = static_cast<VTCPOpcode>(op);
             _handlers.at(opcode)(request);
         }
         catch(const std::exception& e)
@@ -42,17 +49,10 @@ public:
     void onVtcpConnect(const Message & request)
     {
         std::cout << "New client connected" << std::endl;
-        // Logger log;
-        // Message response;
 
-        // log.openLog();
-
-        // log.info("Client connected");
-
-        // response.push(static_cast<int>(VTCPOpcode::VTCP_CONNECT_RES));
-        // response.push(bsoncxx::to_json(log.closeLog().view()));
-
-        // send(response);
+        Message response;
+        response.push(static_cast<int>(VTCPOpcode::VTCP_CONNECT_RES));
+        send(response);
     }
 
     void onVtcpDisconnect(const Message & request)
@@ -83,6 +83,27 @@ public:
         std::cout << "Client requested Manual test" << std::endl;
 
         _startManualTest();
+    }
+
+    void onVtcpHistoryHeader(const Message & request)
+    {
+        Message response;
+
+        response.push(static_cast<int>(VTCPOpcode::VTCP_HISTORY_HEADER_RES));
+        response.push(bsoncxx::to_json(_getHistoryHeaders()));
+        send(response);
+    }
+
+    void onVtcpHistoryLog(const Message & request)
+    {
+        std::cout << "onVtcpHistoryLog started" <<std::endl;
+        auto doc_id = request.readString();
+        Message response;
+
+        response.push(static_cast<int>(VTCPOpcode::VTCP_HISTORY_LOG_RES));
+        response.push(bsoncxx::to_json(_getHistoryLog(doc_id)));
+        send(response);
+        std::cout << "onVtcpHistoryLog finished" <<std::endl;
     }
 
 private:

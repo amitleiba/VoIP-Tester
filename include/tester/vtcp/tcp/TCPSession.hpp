@@ -22,7 +22,9 @@ public:
     std::function<void(const std::size_t, const Message&)> onMessageReceived,
     std::function<void(const std::size_t)> onDisconnect,
     std::function<bsoncxx::document::value(int)> startAutoTest,
-    std::function<void()> startManualTest) : 
+    std::function<void()> startManualTest,
+    std::function<bsoncxx::document::value()> getHistoryHeaders,
+    std::function<bsoncxx::document::value(const std::string &)> getHistoryLog) : 
         _id(id),
         _socket(std::make_shared<tcp::socket>(std::move(socket))),
         _active(std::make_shared<std::atomic<bool>>(false)),
@@ -34,7 +36,9 @@ public:
         _transmitter(_socket, _active,
             std::bind(&TCPSession::onDisconnect, this)),
         _startAutoTest(startAutoTest),
-        _startManualTest(startManualTest)
+        _startManualTest(startManualTest),
+        _getHistoryHeaders(getHistoryHeaders),
+        _getHistoryLog(getHistoryLog)
     { 
     }
 
@@ -51,6 +55,7 @@ public:
 
     void send(const Message & message)
     {
+        std::cout << message.getSize() << std::endl;
         _transmitter.write(message.getAsBytes());
     }
 
@@ -64,6 +69,8 @@ public:
 protected:
     std::function<bsoncxx::document::value(int)> _startAutoTest;
     std::function<void()> _startManualTest;
+    std::function<bsoncxx::document::value()> _getHistoryHeaders;
+    std::function<bsoncxx::document::value(const std::string &)> _getHistoryLog;
 
 private:
     void onDisconnect()

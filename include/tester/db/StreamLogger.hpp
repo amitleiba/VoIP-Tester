@@ -5,7 +5,7 @@
 
 #include "Logger.hpp"
 #include "LogSeverity.hpp"
-#include "MessageLogger.hpp"
+#include "LogMessage.hpp"
 
 class StreamLogger
 {
@@ -28,7 +28,7 @@ public:
 
     StreamLogger& operator<< (const StandardEndline& manipulator)
     {
-        Logger::getInstance().push(MessageLogger(_severity, _buffer.str()));
+        Logger::getInstance().push(LogMessage(_severity, std::move(_buffer.str())));
         _buffer.str("");
         return *this;
     }

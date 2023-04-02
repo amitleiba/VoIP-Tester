@@ -18,8 +18,11 @@ public:
     std::function<void()> startManualTest,
     std::function<bsoncxx::document::value()> getHistoryHeaders,
     std::function<bsoncxx::document::value(const std::string &)> getHistoryLog):
-        TCPSession(std::move(socket), id, onMessageReceived, onDisconnect, startAutoTest, 
-            startManualTest, getHistoryHeaders, getHistoryLog)
+        TCPSession(std::move(socket), id, onMessageReceived, onDisconnect),
+        _startAutoTest(startAutoTest),
+        _startManualTest(startManualTest),
+        _getHistoryHeaders(getHistoryHeaders),
+        _getHistoryLog(getHistoryLog)
     {
         _handlers.emplace(VTCPOpcode::VTCP_CONNECT_REQ, std::bind(&VTCPSession::onVtcpConnect, this, std::placeholders::_1));
         _handlers.emplace(VTCPOpcode::VTCP_DISCONNECT_REQ, std::bind(&VTCPSession::onVtcpDisconnect, this, std::placeholders::_1));
@@ -108,4 +111,8 @@ public:
 
 private:
     std::unordered_map<VTCPOpcode, std::function<void(const Message &)>> _handlers;
+    std::function<bsoncxx::document::value(int)> _startAutoTest;
+    std::function<void()> _startManualTest;
+    std::function<bsoncxx::document::value()> _getHistoryHeaders;
+    std::function<bsoncxx::document::value(const std::string &)> _getHistoryLog;
 };

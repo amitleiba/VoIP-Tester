@@ -2,21 +2,21 @@
 
 #include "LogSeverity.hpp"
 
-class MessageLogger
+class LogMessage
 {
 public:
-    MessageLogger()
+    LogMessage()
     {
 
     }
 
-    MessageLogger(LogSeverity severity, const std::string& description):
+    LogMessage(LogSeverity severity, std::string description):
         _severity(severity), _description(description)
     {
 
     }
 
-    ~MessageLogger() = default;
+    ~LogMessage() = default;
 
     std::string& getDescription()
     {

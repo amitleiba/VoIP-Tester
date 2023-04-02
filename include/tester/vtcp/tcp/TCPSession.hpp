@@ -7,8 +7,6 @@
 
 #include <boost/asio.hpp>
 
-#include "bsoncxx/builder/stream/document.hpp"
-
 #include "TCPReceiver.hpp"
 #include "TCPTransmitter.hpp"
 #include "../generic/Message.hpp"
@@ -20,11 +18,7 @@ class TCPSession
 public:
     TCPSession(tcp::socket socket, const std::size_t id,
     std::function<void(const std::size_t, const Message&)> onMessageReceived,
-    std::function<void(const std::size_t)> onDisconnect,
-    std::function<bsoncxx::document::value(int)> startAutoTest,
-    std::function<void()> startManualTest,
-    std::function<bsoncxx::document::value()> getHistoryHeaders,
-    std::function<bsoncxx::document::value(const std::string &)> getHistoryLog) : 
+    std::function<void(const std::size_t)> onDisconnect) : 
         _id(id),
         _socket(std::make_shared<tcp::socket>(std::move(socket))),
         _active(std::make_shared<std::atomic<bool>>(false)),
@@ -34,11 +28,7 @@ public:
             std::bind(&TCPSession::onDataReceived, this, std::placeholders::_1),
             std::bind(&TCPSession::onDisconnect, this)),
         _transmitter(_socket, _active,
-            std::bind(&TCPSession::onDisconnect, this)),
-        _startAutoTest(startAutoTest),
-        _startManualTest(startManualTest),
-        _getHistoryHeaders(getHistoryHeaders),
-        _getHistoryLog(getHistoryLog)
+            std::bind(&TCPSession::onDisconnect, this))
     { 
     }
 
@@ -67,10 +57,7 @@ public:
     virtual void handle(const Message& request) = 0;
 
 protected:
-    std::function<bsoncxx::document::value(int)> _startAutoTest;
-    std::function<void()> _startManualTest;
-    std::function<bsoncxx::document::value()> _getHistoryHeaders;
-    std::function<bsoncxx::document::value(const std::string &)> _getHistoryLog;
+
 
 private:
     void onDisconnect()

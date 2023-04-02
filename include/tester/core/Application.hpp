@@ -24,19 +24,19 @@ public:
 
     void init(int server_port, int sm_port, const std::string& sm_domain, int sm_log_level, const std::string& db_domain)
     {
-        _sm = std::make_shared<SoftphoneManager>(sm_port, sm_domain);
-        _vs = std::make_shared<VTCPServer>(server_port,
+        _manager = std::make_shared<SoftphoneManager>(sm_port, sm_domain);
+        _server = std::make_shared<VTCPServer>(server_port,
             std::bind(&Application::startAutoTest, this, std::placeholders::_1),
             std::bind(&Application::startManualTest, this),
             std::bind(&Application::getHistoryHeaders, this),
             std::bind(&Application::getHistoryLog, this, std::placeholders::_1));
-        _db = std::make_shared<Database>(db_domain);
-        _sm->pjLibraryInit(sm_log_level);
+        _database = std::make_shared<Database>(db_domain);
+        _manager->pjLibraryInit(sm_log_level);
     }
 
     void run()
     {
-        _vs->start();
+        _server->start();
     }
 
 private:
@@ -47,8 +47,8 @@ private:
 
     bsoncxx::document::value startAutoTest(int amount)
     {
-        auto log = _sm -> runSpamTest(amount);
-        _db->save("Test-Logs", log);
+        auto log = _manager->runSpamTest(amount);
+        _database->save(std::move(COLLECTION_NAME), log);
         return log;
     }
 
@@ -59,16 +59,17 @@ private:
 
     bsoncxx::document::value getHistoryHeaders()
     {
-        return(_db -> getAllHeaders("Test-Logs"));
+        return _database->getAllHeaders(std::move(COLLECTION_NAME));
     }
 
-    bsoncxx::document::value getHistoryLog(const std::string &doc_id)
+    bsoncxx::document::value getHistoryLog(const std::string &docId)
     {
-        auto result = _db -> getLog("Test-Logs", doc_id);
+        auto result = _database->getLog(std::move(COLLECTION_NAME), std::move(docId));
         return result.value();
     }
 
-    std::shared_ptr<Database> _db;
-    std::shared_ptr<SoftphoneManager>_sm;
-    std::shared_ptr<VTCPServer> _vs;
+    std::shared_ptr<Database> _database;
+    std::shared_ptr<SoftphoneManager>_manager;
+    std::shared_ptr<VTCPServer> _server;
+    static constexpr auto COLLECTION_NAME = "Test-Logs";
 };

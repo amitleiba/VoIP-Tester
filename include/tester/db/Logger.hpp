@@ -16,7 +16,7 @@
 #include "bsoncxx/json.hpp"
 
 #include "LogSeverity.hpp"
-#include "MessageLogger.hpp"
+#include "LogMessage.hpp"
 
 class Logger
 {
@@ -47,7 +47,7 @@ public:
         // std::cout << bsoncxx::to_json(_document.view()) << std::endl;
     }
 
-    void push(MessageLogger item)
+    void push(LogMessage item)
     {
         std::unique_lock<std::mutex> lock(_mutex);
         _logsQueue.emplace(std::move(item));
@@ -163,6 +163,6 @@ private:
     bsoncxx::builder::stream::array _data;
     std::mutex _mutex, _startMutex;
     std::condition_variable _cv;
-    std::queue<MessageLogger> _logsQueue;
+    std::queue<LogMessage> _logsQueue;
     std::thread _logThread;
 };

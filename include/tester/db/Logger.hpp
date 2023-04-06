@@ -34,10 +34,10 @@ public:
         {
             _document << "creation-time" << getDate();
             _open = true;
+            _data.clear();
             std::this_thread::sleep_for(std::chrono::milliseconds(500));
         }
     }
-
 
     bsoncxx::document::value closeDocument()
     {

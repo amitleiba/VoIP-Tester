@@ -13,7 +13,8 @@ public:
     std::function<void()> startManualTest,
     std::function<bsoncxx::document::value()> getHistoryHeaders,
     std::function<bsoncxx::document::value(const std::string &)> getHistoryLog) :
-        TCPServer(port, startAutoTest, startManualTest, getHistoryHeaders, getHistoryLog)
+        TCPServer(std::move(port), std::move(startAutoTest), std::move(startManualTest),
+        std::move(getHistoryHeaders), std::move(getHistoryLog))
     {
     }
 

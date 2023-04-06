@@ -56,8 +56,6 @@ public:
 
     virtual void handle(const Message& request) = 0;
 
-protected:
-
 
 private:
     void onDisconnect()

@@ -5,11 +5,6 @@
 class LogMessage
 {
 public:
-    LogMessage()
-    {
-
-    }
-
     LogMessage(LogSeverity severity, std::string description):
         _severity(severity), _description(description)
     {

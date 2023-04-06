@@ -4,7 +4,6 @@
 #include <optional>
 #include <vector>
 #include <sstream>
-#include <typeinfo>
 
 #include "mongocxx/instance.hpp"
 #include "bsoncxx/builder/stream/document.hpp"
@@ -30,43 +29,16 @@ public:
 
     void save(std::string collectionName ,const bsoncxx::document::value &document)
     {
-        mongocxx::collection collection = _database[collectionName];
+        mongocxx::collection collection = _database[std::move(collectionName)];
         collection.insert_one(document.view());
     }
 
-    bsoncxx::document::value getAllHeaders(std::string collectionName)
+    std::vector<bsoncxx::document::value> getAll(std::string collectionName)
     {
-        mongocxx::collection collection = _database[collectionName];
-        mongocxx::cursor cursor = collection.find({});
-
-        bsoncxx::builder::stream::document result{};
-        bsoncxx::builder::stream::array headers{};
-
-        for (auto&& doc : cursor) 
-        {
-            bsoncxx::builder::stream::document header_builder{};
-            header_builder << "_id" << doc["_id"].get_oid().value.to_string();
-
-            if(doc["creation-time"])
-            {
-                header_builder << "creation-time" << doc["creation-time"].get_string().value.to_string();
-            }
-
-            headers << header_builder;
-        }
-
-        result << "headers" << headers;
-
-        return result.extract();
-    }
-
-    std::vector<bsoncxx::document::value> getAllDocuments(std::string collectionName)
-    {
-        mongocxx::collection collection = _database[collectionName];
-        mongocxx::cursor cursor = collection.find({});
+        mongocxx::cursor cursor = _database[std::move(collectionName)].find({});
 
         std::vector<bsoncxx::document::value> results;
-        for (auto&& doc : cursor) 
+        for (const auto & doc : cursor) 
         {
             results.emplace_back(std::move(doc));
         }
@@ -76,8 +48,9 @@ public:
 
     bsoncxx::stdx::optional<std::string> getField(std::string collectionName, std::string id, std::string field_name)
     {
-        mongocxx::collection collection = _database[collectionName];
-        auto result = collection.find_one(bsoncxx::builder::stream::document{} << "_id" << bsoncxx::oid{id} << bsoncxx::builder::stream::finalize);
+        mongocxx::collection collection = _database[std::move(collectionName)];
+        auto result = collection.find_one(bsoncxx::builder::stream::document{} << "_id" 
+            << bsoncxx::oid{id} << bsoncxx::builder::stream::finalize);
 
         if (result) 
         {
@@ -93,27 +66,14 @@ public:
         return bsoncxx::stdx::nullopt;
     }
 
-
-
-    bsoncxx::stdx::optional<bsoncxx::document::value> getLog(std::string collectionName, std::string id)
+    bsoncxx::stdx::optional<bsoncxx::document::value> getDocument(std::string collectionName, std::string id)
     {
-        mongocxx::collection collection = _database[collectionName];
+        mongocxx::collection collection = _database[std::move(collectionName)];
         return collection.find_one(bsoncxx::builder::stream::document{} 
             << "_id" << bsoncxx::oid{id} << bsoncxx::builder::stream::finalize);
     }
 
-
-    bsoncxx::stdx::optional<bsoncxx::document::value> get(std::string collaction_name,  std::string id, std::string time)
-    {
-        mongocxx::collection collection = _database[collaction_name];
-        auto builder = bsoncxx::builder::stream::document{};
-        bsoncxx::oid document_id(id);
-
-        return collection.find_one(bsoncxx::builder::stream::document{} 
-            << "time" << time << bsoncxx::builder::stream::finalize);
-    }
-
-private:
+protected:
     mongocxx::instance _instance;
     mongocxx::uri _uri;
     mongocxx::client _client;

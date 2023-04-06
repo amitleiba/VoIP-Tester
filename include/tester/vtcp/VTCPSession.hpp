@@ -18,11 +18,11 @@ public:
     std::function<void()> startManualTest,
     std::function<bsoncxx::document::value()> getHistoryHeaders,
     std::function<bsoncxx::document::value(const std::string &)> getHistoryLog):
-        TCPSession(std::move(socket), id, onMessageReceived, onDisconnect),
-        _startAutoTest(startAutoTest),
-        _startManualTest(startManualTest),
-        _getHistoryHeaders(getHistoryHeaders),
-        _getHistoryLog(getHistoryLog)
+        TCPSession(std::move(socket), std::move(id), std::move(onMessageReceived), std::move(onDisconnect)),
+        _startAutoTest(std::move(startAutoTest)),
+        _startManualTest(std::move(startManualTest)),
+        _getHistoryHeaders(std::move(getHistoryHeaders)),
+        _getHistoryLog(std::move(getHistoryLog))
     {
         _handlers.emplace(VTCPOpcode::VTCP_CONNECT_REQ, std::bind(&VTCPSession::onVtcpConnect, this, std::placeholders::_1));
         _handlers.emplace(VTCPOpcode::VTCP_DISCONNECT_REQ, std::bind(&VTCPSession::onVtcpDisconnect, this, std::placeholders::_1));

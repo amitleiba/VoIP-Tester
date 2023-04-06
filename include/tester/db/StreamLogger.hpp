@@ -28,7 +28,7 @@ public:
 
     StreamLogger& operator<< (const StandardEndline& manipulator)
     {
-        Logger::getInstance().push(LogMessage(_severity, std::move(_buffer.str())));
+        Logger::getInstance().push(LogMessage(_severity, _buffer.str()));
         _buffer.str("");
         return *this;
     }

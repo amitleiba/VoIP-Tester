@@ -1,14 +1,18 @@
 #pragma once
 
-#include<iostream>
-#include<unordered_map>
-#include<string>
-#include<memory>
+#include <iostream>
+#include <unordered_map>
+#include <string>
+#include <memory>
 
-#include<pjsua2.hpp>
+#include <pjsua2.hpp>
 
-#include"Softphone.hpp"
-#include"SoftphoneArguments.hpp"
+#include "bsoncxx/builder/stream/document.hpp"
+
+#include "Softphone.hpp"
+#include "SoftphoneArguments.hpp"
+#include "../db/Logger.hpp"
+#include "../db/StreamLogger.hpp"
 
 class SoftphoneManager
 {
@@ -20,7 +24,6 @@ public:
 
     ~SoftphoneManager()
     {
-
         _endpoint.libDestroy();
         _softphones.clear();  //TODO
     }
@@ -52,8 +55,16 @@ public:
         }
     }
 
-    void runSpamTest(int amount)
+    void onCallDisconnected()
     {
+        _cv.notify_one();
+    }
+
+    bsoncxx::document::value runSpamTest(int amount)
+    {
+        std::unique_lock<std::mutex> lock(_mutex);
+        Logger::getInstance().openDocument();
+        LOG_INFO << "started run spam test" << std::endl;
         registerSoftphones(amount * 2);
         pj_thread_sleep(TEST_SLEEP_DURATION * MILLISECONDS_TO_SECONDS);
         for(int i = 0; i < (amount * 2); i += 2)
@@ -64,7 +75,11 @@ public:
         for(int i = 0; i < (amount * 2); i += 2)
         {
             _softphones.at(i)->hangup();
+            _cv.wait(lock, [this, i](){ return !_softphones.at(i)->isActive(); });
         }
+        _softphones.clear();
+        LOG_INFO << "finished run spam test" << std::endl;
+        return Logger::getInstance().closeDocument();
     }
 
 private:
@@ -80,7 +95,7 @@ private:
         for(int i = 0; i < amount; i++)
         {
             args.id = std::to_string(i + START_URI);
-            _softphones.emplace_back(std::make_shared<Softphone>(args));
+            _softphones.emplace_back(std::make_shared<Softphone>(args, std::bind(&SoftphoneManager::onCallDisconnected, this)));
         }
     }
 
@@ -92,4 +107,6 @@ private:
     const std::string _domain;
     pj::Endpoint _endpoint;
     std::vector<std::shared_ptr<Softphone>> _softphones;
+    std::mutex _mutex;
+    std::condition_variable _cv;
 };

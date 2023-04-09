@@ -1,22 +1,22 @@
 #pragma once
 
-#include<memory>
-#include<functional>
-#include<atomic>
-#include<string>
+#include <memory>
+#include <functional>
+#include <atomic>
+#include <string>
 
-#include<boost/asio.hpp>
+#include <boost/asio.hpp>
 
-#include"TCPReceiver.hpp"
-#include"TCPTransmitter.hpp"
-#include"../generic/Message.hpp"
+#include "TCPReceiver.hpp"
+#include "TCPTransmitter.hpp"
+#include "../generic/Message.hpp"
 
 using  boost::asio::ip::tcp;
 
 class TCPSession
 {
 public:
-    TCPSession(tcp::socket socket, const std::size_t id,
+    TCPSession(const std::size_t id, tcp::socket socket,
     std::function<void(const std::size_t, const Message&)> onMessageReceived,
     std::function<void(const std::size_t)> onDisconnect) : 
         _id(id),
@@ -45,6 +45,7 @@ public:
 
     void send(const Message & message)
     {
+        std::cout << message.getSize() << std::endl;
         _transmitter.write(message.getAsBytes());
     }
 
@@ -52,8 +53,6 @@ public:
     {
         onDisconnect();
     }
-
-    virtual void handle(const Message& request) = 0;
 
 private:
     void onDisconnect()

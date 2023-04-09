@@ -1,6 +1,8 @@
-#include"tester/vtcp/VTCPServer.hpp"
+#include "tester/core/Application.hpp"
 
-int main(){
-    VTCPServer server(5060);
-    server.start();
+int main()
+{
+    auto app = Application::getInstance();
+    app.init(8080, 5060, "192.168.1.123", 0, "192.168.1.123");
+    app.run();
 }

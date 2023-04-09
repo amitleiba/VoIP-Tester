@@ -46,11 +46,12 @@ public:
         return std::move(results);
     }
 
-    bsoncxx::stdx::optional<std::string> getField(std::string collectionName, std::string id, std::string field_name)
+    bsoncxx::stdx::optional<std::string> getField(std::string collectionName, std::string id,
+        const std::string &field_name)
     {
         mongocxx::collection collection = _database[std::move(collectionName)];
-        auto result = collection.find_one(bsoncxx::builder::stream::document{} << "_id" 
-            << bsoncxx::oid{id} << bsoncxx::builder::stream::finalize);
+        auto result = collection.find_one(bsoncxx::builder::stream::document{} << ID 
+            << bsoncxx::oid{std::move(id)} << bsoncxx::builder::stream::finalize);
 
         if (result) 
         {
@@ -70,7 +71,7 @@ public:
     {
         mongocxx::collection collection = _database[std::move(collectionName)];
         return collection.find_one(bsoncxx::builder::stream::document{} 
-            << "_id" << bsoncxx::oid{id} << bsoncxx::builder::stream::finalize);
+            << "_id" << bsoncxx::oid{std::move(id)} << bsoncxx::builder::stream::finalize);
     }
 
 protected:
@@ -82,4 +83,6 @@ protected:
     static constexpr auto DATABASE_NAME = "VoIP-Tester-DB";
     static constexpr auto MONGO = "mongodb://";
     static constexpr auto PORT = ":27017";
+
+    const std::string ID = "_id";
 };

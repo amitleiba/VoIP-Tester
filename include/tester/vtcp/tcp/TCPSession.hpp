@@ -54,9 +54,6 @@ public:
         onDisconnect();
     }
 
-    virtual void handle(const Message& request) = 0;
-
-
 private:
     void onDisconnect()
     {

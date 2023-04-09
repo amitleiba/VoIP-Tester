@@ -2,7 +2,7 @@
 
 #include "Database.hpp"
 
-class VTDatabase : Database
+class VTDatabase : public Database
 {
 public:
     VTDatabase(const std::string &domain):
@@ -10,54 +10,44 @@ public:
     {     
     }
 
-    ~VTDatabase() = default;
-
-    void save(const bsoncxx::document::value &document)
+    void saveLog(const bsoncxx::document::value &document)
     {
-        Database::save(COLLECTION_NAME ,document);
+        save(TEST_LOGS_COLLECTION ,document);
     }
 
-    bsoncxx::document::value getAllHeaders()
+    bsoncxx::document::value getTestLogsHistory()
     {
-        mongocxx::collection collection = _database[COLLECTION_NAME];
+        mongocxx::collection collection = _database[TEST_LOGS_COLLECTION];
         mongocxx::cursor cursor = collection.find({});
 
         bsoncxx::builder::stream::document result{};
         bsoncxx::builder::stream::array headers{};
 
-        for (auto&& doc : cursor) 
+        for (const auto & doc : cursor) 
         {
-            bsoncxx::builder::stream::document header_builder{};
-            header_builder << "_id" << doc["_id"].get_oid().value.to_string();
+            bsoncxx::builder::stream::document headerBuilder{};
+            headerBuilder << ID << doc[ID].get_oid().value.to_string();
 
-            if(doc["creation-time"])
+            if(doc[CREATION_TIME])
             {
-                header_builder << "creation-time" << doc["creation-time"].get_string().value.to_string();
+                headerBuilder << CREATION_TIME << doc[CREATION_TIME].get_string().value.to_string();
             }
 
-            headers << header_builder;
+            headers << headerBuilder;
         }
 
-        result << "headers" << headers;
+        result << HEADERS << headers;
 
         return result.extract();
     }
 
-    std::vector<bsoncxx::document::value> getAll()
+    bsoncxx::stdx::optional<bsoncxx::document::value> getLog(std::string id)
     {
-        return Database::getAll(COLLECTION_NAME);
-    }
-
-    bsoncxx::stdx::optional<std::string> getField(std::string id, std::string field_name)
-    {
-        return Database::getField(COLLECTION_NAME, std::move(id), std::move(field_name));
-    }
-
-    bsoncxx::stdx::optional<bsoncxx::document::value> getDocument(std::string id)
-    {
-        return Database::getDocument(COLLECTION_NAME, std::move(id));
+        return getDocument(TEST_LOGS_COLLECTION, std::move(id));
     }
 
 private:
-    static constexpr auto COLLECTION_NAME = "Test-Logs";
+    static constexpr auto TEST_LOGS_COLLECTION = "Test-Logs";
+    const std::string CREATION_TIME = "creation-time";
+    const std::string HEADERS = "headers";
 };

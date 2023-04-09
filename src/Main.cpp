@@ -1,4 +1,4 @@
-#include "../include/tester/core/Application.hpp"
+#include "tester/core/Application.hpp"
 
 int main()
 {

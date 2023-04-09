@@ -16,7 +16,7 @@ using  boost::asio::ip::tcp;
 class TCPSession
 {
 public:
-    TCPSession(tcp::socket socket, const std::size_t id,
+    TCPSession(const std::size_t id, tcp::socket socket,
     std::function<void(const std::size_t, const Message&)> onMessageReceived,
     std::function<void(const std::size_t)> onDisconnect) : 
         _id(id),

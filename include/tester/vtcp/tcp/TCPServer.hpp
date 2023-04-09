@@ -61,7 +61,7 @@ private:
     {
         std::cout << "Accepted connection from " << socket.remote_endpoint().address().to_string()
             << " : " << socket.remote_endpoint().port() << std::endl;
-        auto session = std::make_shared<TCPSession>(std::move(socket), id,
+        auto session = std::make_shared<TCPSession>(id, std::move(socket),
             std::bind(&TCPServer::onMessageReceived, this, std::placeholders::_1, std::placeholders::_2),
             std::bind(&TCPServer::onDisconnect, this, std::placeholders::_1));
         _sessions.emplace(id, std::move(session));

@@ -23,15 +23,15 @@ public:
     ~Application() = default;
 
     void init(int serverPort, int softphoneManagerPort, const std::string& softphoneManagerDomain,
-        int softphoneManagerLogLevel, const std::string& databaseDomain)
+        int softphoneManagerLogLevel, std::string databaseDomain)
     {
         _manager = std::make_shared<SoftphoneManager>(softphoneManagerPort, softphoneManagerDomain);
         _server = std::make_shared<VTCPServer>(serverPort, 
             std::bind(&Application::startAutoTest, this, std::placeholders::_1),
             std::bind(&Application::startManualTest, this),
-            std::bind(&Application::getHistoryHeaders, this),
+            std::bind(&Application::getTestLogsHistory, this),
             std::bind(&Application::getHistoryLog, this, std::placeholders::_1));
-        _database = std::make_shared<VTDatabase>(databaseDomain);
+        _database = std::make_shared<VTDatabase>(std::move(databaseDomain));
         _manager->pjLibraryInit(softphoneManagerLogLevel);
     }
 
@@ -40,10 +40,13 @@ public:
         _server->start();
     }
 
+private:
+    Application() = default;
+
     bsoncxx::document::value startAutoTest(int amount)
     {
         auto log = _manager->runSpamTest(amount);
-        _database->saveLog(log);
+        _database->saveTestLog(log);
         return log;
     }
 
@@ -52,21 +55,15 @@ public:
 
     }
 
-    bsoncxx::document::value getHistoryHeaders()
+    bsoncxx::document::value getTestLogsHistory()
     {
         return _database->getTestLogsHistory();
     }
 
-    bsoncxx::document::value getHistoryLog(const std::string &documentId)
+    bsoncxx::document::value getHistoryLog(std::string documentId)
     {
-        auto result = _database->getLog(documentId);
+        auto result = _database->getHistoryLog(std::move(documentId));
         return result.value();
-    }
-
-private:
-    Application()
-    {
-
     }
 
     std::shared_ptr<VTDatabase> _database;

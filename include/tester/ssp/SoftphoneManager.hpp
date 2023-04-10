@@ -17,8 +17,8 @@
 class SoftphoneManager
 {
 public:
-    SoftphoneManager(int port, std::string domain):
-        _port(port), _domain(std::move(domain))
+    SoftphoneManager(int port):
+        _port(port)
     {
     }
 
@@ -60,12 +60,12 @@ public:
         _cv.notify_one();
     }
 
-    bsoncxx::document::value runSpamTest(int amount)
+    bsoncxx::document::value runSpamTest(int amount, const std::string &domain)
     {
         std::unique_lock<std::mutex> lock(_mutex);
         Logger::getInstance().openDocument();
         LOG_INFO << "started run spam test" << std::endl;
-        registerSoftphones(amount * 2);
+        registerSoftphones(amount * 2, domain);
         pj_thread_sleep(TEST_SLEEP_DURATION * MILLISECONDS_TO_SECONDS);
         for(int i = 0; i < (amount * 2); i += 2)
         {
@@ -83,10 +83,10 @@ public:
     }
 
 private:
-    void registerSoftphones(int amount)
+    void registerSoftphones(int amount, const std::string &domain)
     {
         SoftphoneArguments args;
-        args.domain = _domain;
+        args.domain = domain;
         args.secret = "12345678";
         args.timeout = 5000;
 
@@ -104,7 +104,6 @@ private:
     static constexpr int START_URI = 1000;
 
     const int _port;
-    const std::string _domain;
     pj::Endpoint _endpoint;
     std::vector<std::shared_ptr<Softphone>> _softphones;
     std::mutex _mutex;

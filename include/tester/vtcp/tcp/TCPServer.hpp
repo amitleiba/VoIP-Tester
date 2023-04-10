@@ -43,6 +43,9 @@ protected:
     std::unordered_map<std::size_t, std::shared_ptr<TCPSession>> _sessions;
 
     virtual void handle(const std::size_t id, const Message& request) = 0;
+    virtual void onSessionOpened(const std::size_t id) = 0;
+    virtual void onSessionClosed(const std::size_t id) = 0;
+
 
     void send(const std::size_t id, const Message& message) 
     {

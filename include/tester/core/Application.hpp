@@ -22,12 +22,11 @@ public:
 
     ~Application() = default;
 
-    void init(int serverPort, int softphoneManagerPort, const std::string& softphoneManagerDomain,
-        int softphoneManagerLogLevel, std::string databaseDomain)
+    void init(int serverPort, int softphoneManagerPort, int softphoneManagerLogLevel, std::string databaseDomain)
     {
-        _manager = std::make_shared<SoftphoneManager>(softphoneManagerPort, softphoneManagerDomain);
+        _manager = std::make_shared<SoftphoneManager>(softphoneManagerPort);
         _server = std::make_shared<VTCPServer>(serverPort, 
-            std::bind(&Application::startAutoTest, this, std::placeholders::_1),
+            std::bind(&Application::startAutoTest, this, std::placeholders::_1, std::placeholders::_2),
             std::bind(&Application::startManualTest, this),
             std::bind(&Application::getTestLogsHistory, this),
             std::bind(&Application::getHistoryLog, this, std::placeholders::_1));
@@ -43,9 +42,9 @@ public:
 private:
     Application() = default;
 
-    bsoncxx::document::value startAutoTest(int amount)
+    bsoncxx::document::value startAutoTest(int amount, const std::string &domain)
     {
-        auto log = _manager->runSpamTest(amount);
+        auto log = _manager->runSpamTest(amount, domain);
         _database->saveTestLog(log);
         return log;
     }

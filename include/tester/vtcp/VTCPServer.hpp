@@ -1,18 +1,20 @@
 #pragma once
 
 #include <functional>
+#include <vector>
 
 #include "tcp/TCPServer.hpp"
 #include "VTCPOpcode.hpp"
+#include "../ssp/Softphone.hpp"
 
 class VTCPServer : public TCPServer
 {
 public:
     VTCPServer(const std::uint16_t port, 
-    std::function<bsoncxx::document::value(int)> startAutoTest,
+    std::function<bsoncxx::document::value(int, const std::string &)> startAutoTest,
     std::function<void()> startManualTest,
     std::function<bsoncxx::document::value()> getHistoryHeaders,
-    std::function<bsoncxx::document::value(const std::string &)> getHistoryLog) :
+    std::function<bsoncxx::document::value(std::string)> getHistoryLog) :
         TCPServer(port),
         _startAutoTest(std::move(startAutoTest)),
         _startManualTest(std::move(startManualTest)),
@@ -79,7 +81,7 @@ public:
         Message response;
 
         response.push(static_cast<int>(VTCPOpcode::VTCP_AUTO_TEST_RES));
-        response.push(bsoncxx::to_json(_startAutoTest(amount).view()));
+        response.push(bsoncxx::to_json(_startAutoTest(amount, domain).view()));
         send(id, response);
     }
 
@@ -109,10 +111,25 @@ public:
         send(id, response);
     }
 
+    void onSessionOpened(const std::size_t id)
+    {
+
+    }
+    
+    void onSessionClosed(const std::size_t id)
+    {
+
+    }
+
 private:
     std::unordered_map<VTCPOpcode, std::function<void(int ,const Message &)>> _handlers;
-    std::function<bsoncxx::document::value(int)> _startAutoTest;
+    std::unordered_map<std::size_t, std::vector<Softphone>> manualTestSoftphones;
+
+    std::function<bsoncxx::document::value(int, const std::string &)> _startAutoTest;
     std::function<void()> _startManualTest;
     std::function<bsoncxx::document::value()> _getHistoryHeaders;
-    std::function<bsoncxx::document::value(const std::string &)> _getHistoryLog;
+    std::function<bsoncxx::document::value(std::string)> _getHistoryLog;
+
+    static constexpr int START_ID = 9997;
+    static constexpr int END_ID = 9999;
 };

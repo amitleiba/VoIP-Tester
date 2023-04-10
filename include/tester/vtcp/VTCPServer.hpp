@@ -5,21 +5,15 @@
 
 #include "tcp/TCPServer.hpp"
 #include "VTCPOpcode.hpp"
-#include "../ssp/Softphone.hpp"
+
+#include "../db/VTDatabase.hpp"
+#include "../ssp/SoftphoneManager.hpp"
 
 class VTCPServer : public TCPServer
 {
 public:
-    VTCPServer(const std::uint16_t port, 
-    std::function<bsoncxx::document::value(int, const std::string &)> startAutoTest,
-    std::function<void()> startManualTest,
-    std::function<bsoncxx::document::value()> getHistoryHeaders,
-    std::function<bsoncxx::document::value(std::string)> getHistoryLog) :
-        TCPServer(port),
-        _startAutoTest(std::move(startAutoTest)),
-        _startManualTest(std::move(startManualTest)),
-        _getHistoryHeaders(std::move(getHistoryHeaders)),
-        _getHistoryLog(std::move(getHistoryLog))
+    VTCPServer(const std::uint16_t port) :
+        TCPServer(port)
     {
         _handlers.emplace(VTCPOpcode::VTCP_CONNECT_REQ, std::bind(&VTCPServer::onVtcpConnect, this, std::placeholders::_1, std::placeholders::_2));
         _handlers.emplace(VTCPOpcode::VTCP_DISCONNECT_REQ, std::bind(&VTCPServer::onVtcpDisconnect, this, std::placeholders::_1, std::placeholders::_2));
@@ -31,6 +25,14 @@ public:
 
     ~VTCPServer() = default;
 
+    void init(int softphoneManagerPort, int softphoneManagerLogLevel, std::string databaseDomain)
+    {
+        _manager = std::make_shared<SoftphoneManager>(softphoneManagerPort);
+        _database = std::make_shared<VTDatabase>(std::move(databaseDomain));
+        _manager->pjLibraryInit(softphoneManagerLogLevel);
+    }
+
+private:
     void handle(const std::size_t id, const Message& request) override
     {
         try
@@ -78,10 +80,13 @@ public:
 
         std::cout << "Domain: " << domain << " Amount: " << amount << std::endl;
 
+        auto log = _manager->runSpamTest(amount, domain);
+        _database->saveTestLog(log);
+
         Message response;
 
         response.push(static_cast<int>(VTCPOpcode::VTCP_AUTO_TEST_RES));
-        response.push(bsoncxx::to_json(_startAutoTest(amount, domain).view()));
+        response.push(bsoncxx::to_json(log.view()));
         send(id, response);
     }
 
@@ -89,7 +94,7 @@ public:
     {
         std::cout << "Client requested Manual test" << std::endl;
 
-        _startManualTest();
+        // _startManualTest();
     }
 
     void onVtcpHistoryHeader(const std::size_t id, const Message & request)
@@ -97,17 +102,17 @@ public:
         Message response;
 
         response.push(static_cast<int>(VTCPOpcode::VTCP_HISTORY_HEADER_RES));
-        response.push(bsoncxx::to_json(_getHistoryHeaders()));
+        response.push(bsoncxx::to_json(_database->getTestLogsHistory()));
         send(id, response);
     }
 
     void onVtcpHistoryLog(const std::size_t id, const Message & request)
     {
-        auto doc_id = request.readString();
+        auto documentId = request.readString();
         Message response;
 
         response.push(static_cast<int>(VTCPOpcode::VTCP_HISTORY_LOG_RES));
-        response.push(bsoncxx::to_json(_getHistoryLog(doc_id)));
+        response.push(bsoncxx::to_json(_database->getHistoryLog(std::move(documentId)).value().view()));
         send(id, response);
     }
 
@@ -121,14 +126,11 @@ public:
 
     }
 
-private:
+    std::shared_ptr<VTDatabase> _database;
+    std::shared_ptr<SoftphoneManager>_manager;
+
     std::unordered_map<VTCPOpcode, std::function<void(int ,const Message &)>> _handlers;
     std::unordered_map<std::size_t, std::vector<Softphone>> manualTestSoftphones;
-
-    std::function<bsoncxx::document::value(int, const std::string &)> _startAutoTest;
-    std::function<void()> _startManualTest;
-    std::function<bsoncxx::document::value()> _getHistoryHeaders;
-    std::function<bsoncxx::document::value(std::string)> _getHistoryLog;
 
     static constexpr int START_ID = 9997;
     static constexpr int END_ID = 9999;

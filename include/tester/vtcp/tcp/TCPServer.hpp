@@ -69,6 +69,7 @@ private:
             std::bind(&TCPServer::onDisconnect, this, std::placeholders::_1));
         _sessions.emplace(id, std::move(session));
         _sessions.at(id)->start();
+        onSessionOpened(id);
     }
 
     void onMessageReceived(const std::size_t id, const Message& request) 
@@ -79,6 +80,7 @@ private:
     void onDisconnect(const std::size_t id)
     {
         _sessions.erase(id);
+        onSessionClosed(id);
     }
 
     TCPListener _listener;

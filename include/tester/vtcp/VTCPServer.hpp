@@ -12,8 +12,11 @@
 class VTCPServer : public TCPServer
 {
 public:
-    VTCPServer(const std::uint16_t port) :
-        TCPServer(port)
+    VTCPServer(const std::uint16_t port, int softphoneManagerPort,
+    int softphoneManagerLogLevel, std::string databaseDomain) :
+        TCPServer(port),
+        _manager(softphoneManagerPort),
+        _database(std::move(databaseDomain))
     {
         _handlers.emplace(VTCPOpcode::VTCP_CONNECT_REQ, std::bind(&VTCPServer::onVtcpConnect, this, std::placeholders::_1, std::placeholders::_2));
         _handlers.emplace(VTCPOpcode::VTCP_DISCONNECT_REQ, std::bind(&VTCPServer::onVtcpDisconnect, this, std::placeholders::_1, std::placeholders::_2));
@@ -21,16 +24,10 @@ public:
         _handlers.emplace(VTCPOpcode::VTCP_MANUAL_TEST_REQ, std::bind(&VTCPServer::onVtcpManualTest, this, std::placeholders::_1, std::placeholders::_2));
         _handlers.emplace(VTCPOpcode::VTCP_HISTORY_HEADER_REQ, std::bind(&VTCPServer::onVtcpHistoryHeader, this, std::placeholders::_1, std::placeholders::_2));
         _handlers.emplace(VTCPOpcode::VTCP_HISTORY_LOG_REQ, std::bind(&VTCPServer::onVtcpHistoryLog, this, std::placeholders::_1, std::placeholders::_2));
+        _manager.pjLibraryInit(softphoneManagerLogLevel);
     }
 
     ~VTCPServer() = default;
-
-    void init(int softphoneManagerPort, int softphoneManagerLogLevel, std::string databaseDomain)
-    {
-        _manager = std::make_shared<SoftphoneManager>(softphoneManagerPort);
-        _database = std::make_shared<VTDatabase>(std::move(databaseDomain));
-        _manager->pjLibraryInit(softphoneManagerLogLevel);
-    }
 
 private:
     void handle(const std::size_t id, const Message& request) override
@@ -38,7 +35,6 @@ private:
         try
         {
             auto op = request.readInteger();
-            std::cout << op << std::endl;
             auto opcode = static_cast<VTCPOpcode>(op);
             _handlers.at(opcode)(id, request);
         }
@@ -80,8 +76,8 @@ private:
 
         std::cout << "Domain: " << domain << " Amount: " << amount << std::endl;
 
-        auto log = _manager->runSpamTest(amount, domain);
-        _database->saveTestLog(log);
+        auto log = _manager.runSpamTest(amount, domain);
+        _database.saveTestLog(log);
 
         Message response;
 
@@ -94,7 +90,10 @@ private:
     {
         std::cout << "Client requested Manual test" << std::endl;
 
-        // _startManualTest();
+        Message response;
+        response.push(static_cast<int>(VTCPOpcode::VTCP_MANUAL_TEST_RES));
+        response.push(_manager.handleManualTest(request));
+        send(id, response);
     }
 
     void onVtcpHistoryHeader(const std::size_t id, const Message & request)
@@ -102,7 +101,7 @@ private:
         Message response;
 
         response.push(static_cast<int>(VTCPOpcode::VTCP_HISTORY_HEADER_RES));
-        response.push(bsoncxx::to_json(_database->getTestLogsHistory()));
+        response.push(bsoncxx::to_json(_database.getTestLogsHistory()));
         send(id, response);
     }
 
@@ -112,26 +111,31 @@ private:
         Message response;
 
         response.push(static_cast<int>(VTCPOpcode::VTCP_HISTORY_LOG_RES));
-        response.push(bsoncxx::to_json(_database->getHistoryLog(std::move(documentId)).value().view()));
+        response.push(bsoncxx::to_json(_database.getHistoryLog(std::move(documentId)).value().view()));
         send(id, response);
     }
 
-    void onSessionOpened(const std::size_t id)
+    void onSessionOpened(const std::size_t sessionId) override
     {
-
+        std::vector<Softphone> manualTestSoftphonesVector;
+        for(int i = START_ID; i <= START_ID + MANUAL_SOFTPHONE_AMOUNT; i++)
+        {
+            int softphoneId = sessionId * 10000 + i;
+        }
+        _manualTestSoftphones.emplace(sessionId, manualTestSoftphonesVector);
     }
     
-    void onSessionClosed(const std::size_t id)
+    void onSessionClosed(const std::size_t sessionId) override
     {
-
+        _manualTestSoftphones.erase(sessionId);
     }
 
-    std::shared_ptr<VTDatabase> _database;
-    std::shared_ptr<SoftphoneManager>_manager;
+    VTDatabase _database;
+    SoftphoneManager _manager;
 
     std::unordered_map<VTCPOpcode, std::function<void(int ,const Message &)>> _handlers;
-    std::unordered_map<std::size_t, std::vector<Softphone>> manualTestSoftphones;
+    std::unordered_map<std::size_t, std::vector<Softphone>> _manualTestSoftphones;
 
-    static constexpr int START_ID = 9997;
-    static constexpr int END_ID = 9999;
+    static constexpr int START_ID = 1000;
+    static constexpr int MANUAL_SOFTPHONE_AMOUNT = 3;
 };

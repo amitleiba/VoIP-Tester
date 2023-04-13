@@ -11,7 +11,7 @@
 
 #include "Softphone.hpp"
 #include "SoftphoneArguments.hpp"
-#include "../db/Logger.hpp"
+#include "ManualTestOpcode.hpp"
 #include "../db/StreamLogger.hpp"
 
 class SoftphoneManager
@@ -20,6 +20,10 @@ public:
     SoftphoneManager(int port):
         _port(port)
     {
+        _manualTestHandlers.emplace(ManualTestOpcode::MANUAL_TEST_REGISTER_REQ, std::bind(&SoftphoneManager::manualTestRegister, this, std::placeholders::_1));
+        _manualTestHandlers.emplace(ManualTestOpcode::MANUAL_TEST_CALL_REQ, std::bind(&SoftphoneManager::manualTestCall, this, std::placeholders::_1));
+        _manualTestHandlers.emplace(ManualTestOpcode::MANUAL_TEST_ANSWER_REQ, std::bind(&SoftphoneManager::manualTestAnswer, this, std::placeholders::_1));
+        _manualTestHandlers.emplace(ManualTestOpcode::MANUAL_TEST_HANGUP_REQ, std::bind(&SoftphoneManager::manualTestHangup, this, std::placeholders::_1));
     }
 
     ~SoftphoneManager()
@@ -60,12 +64,12 @@ public:
         _cv.notify_one();
     }
 
-    bsoncxx::document::value runSpamTest(int amount, const std::string &domain)
+    bsoncxx::document::value runSpamTest(int amount, std::string domain)
     {
         std::unique_lock<std::mutex> lock(_mutex);
         Logger::getInstance().openDocument();
         LOG_INFO << "started run spam test" << std::endl;
-        registerSoftphones(amount * 2, domain);
+        registerSoftphones(amount * 2, std::move(domain));
         pj_thread_sleep(TEST_SLEEP_DURATION * MILLISECONDS_TO_SECONDS);
         for(int i = 0; i < (amount * 2); i += 2)
         {
@@ -82,21 +86,76 @@ public:
         return Logger::getInstance().closeDocument();
     }
 
-private:
-    void registerSoftphones(int amount, const std::string &domain)
+    Message handleManualTest(const Message& request)
     {
-        SoftphoneArguments args;
-        args.domain = domain;
-        args.secret = "12345678";
-        args.timeout = 5000;
+        try
+        {
+            auto op = request.readInteger();
+            auto opcode = static_cast<ManualTestOpcode>(op);
+            return _manualTestHandlers.at(opcode)(request);
+        }
+        catch(const std::exception& e)
+        {
+            std::cerr << e.what() << std::endl;
+            return Message();
+        }
+    }
 
+private:
+    void registerSoftphones(int amount, std::string domain)
+    {
         _softphones.reserve(amount);
 
         for(int i = 0; i < amount; i++)
         {
-            args.id = std::to_string(i + START_URI);
-            _softphones.emplace_back(std::make_shared<Softphone>(args, std::bind(&SoftphoneManager::onCallDisconnected, this)));
+            _softphones.emplace_back(std::make_shared<Softphone>(
+                SoftphoneArguments("12345678", std::move(domain), 5000, std::to_string(i + START_URI)),
+                std::bind(&SoftphoneManager::onCallDisconnected, this)));
         }
+    }
+
+    Message manualTestRegister(const Message& request)
+    {
+        //getting the required arguments for the function from the request
+        Message response;
+        response.push(static_cast<int>(ManualTestOpcode::MANUAL_TEST_REGISTER_RES));
+        Logger::getInstance().openDocument();
+        //function in softphone that we want to activate
+        response.push(bsoncxx::to_json(Logger::getInstance().closeDocument().view()));
+        return response;
+    }
+
+    Message manualTestCall(const Message& request)
+    {
+        //getting the required arguments for the function from the request
+        Message response;
+        response.push(static_cast<int>(ManualTestOpcode::MANUAL_TEST_CALL_RES));
+        Logger::getInstance().openDocument();
+        //function in softphone that we want to activate
+        response.push(bsoncxx::to_json(Logger::getInstance().closeDocument().view()));
+        return response;
+    }
+
+    Message manualTestAnswer(const Message& request)
+    {
+        //getting the required arguments for the function from the request
+        Message response;
+        response.push(static_cast<int>(ManualTestOpcode::MANUAL_TEST_ANSWER_RES));
+        Logger::getInstance().openDocument();
+        //function in softphone that we want to activate
+        response.push(bsoncxx::to_json(Logger::getInstance().closeDocument().view()));
+        return response;
+    }
+
+    Message manualTestHangup(const Message& request)
+    {
+        //getting the required arguments for the function from the request
+        Message response;
+        response.push(static_cast<int>(ManualTestOpcode::MANUAL_TEST_HANGUP_RES));
+        Logger::getInstance().openDocument();
+        //function in softphone that we want to activate
+        response.push(bsoncxx::to_json(Logger::getInstance().closeDocument().view()));
+        return response;
     }
 
     static constexpr int MILLISECONDS_TO_SECONDS = 1000;
@@ -108,4 +167,6 @@ private:
     std::vector<std::shared_ptr<Softphone>> _softphones;
     std::mutex _mutex;
     std::condition_variable _cv;
+
+    std::unordered_map<ManualTestOpcode, std::function<Message(const Message &)>> _manualTestHandlers;
 };

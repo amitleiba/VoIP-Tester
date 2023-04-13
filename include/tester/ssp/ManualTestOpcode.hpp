@@ -1,0 +1,15 @@
+#pragma once
+
+enum class ManualTestOpcode : int {
+    MANUAL_TEST_REGISTER_REQ = 1,
+    MANUAL_TEST_REGISTER_RES = 2,
+
+    MANUAL_TEST_CALL_REQ = 3,
+    MANUAL_TEST_CALL_RES = 4,
+
+    MANUAL_TEST_ANSWER_REQ = 5,
+    MANUAL_TEST_ANSWER_RES = 6,
+
+    MANUAL_TEST_HANGUP_REQ = 7,
+    MANUAL_TEST_HANGUP_RES = 8
+};

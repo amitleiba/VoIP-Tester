@@ -63,6 +63,12 @@ public:
         push(string.size());
         _payload.insert(_payload.end(), string.begin(), string.end());
     }
+
+    void push(const Message &message)
+    {
+        _payload.insert(_payload.end(), message.getPayload().begin(), message.getPayload().end());
+    }
+
     std::vector<std::uint8_t> getAsBytes() const
     {
         int size = _payload.size();

@@ -7,15 +7,17 @@
 #include "VTCPOpcode.hpp"
 
 #include "../db/VTDatabase.hpp"
-#include "../ssp/SoftphoneManager.hpp"
+#include "../ssp/AutoTestHandler.hpp"
+#include "../ssp/ManualTestHandler.hpp"
+#include "../ssp/PjManager.hpp"
 
 class VTCPServer : public TCPServer
 {
 public:
-    VTCPServer(const std::uint16_t port, int softphoneManagerPort,
-    int softphoneManagerLogLevel, std::string databaseDomain) :
+    VTCPServer(const std::uint16_t port, int pjManagerPort,
+    int pjManagerLogLevel, std::string databaseDomain) :
         TCPServer(port),
-        _manager(softphoneManagerPort),
+        _manager(pjManagerPort, pjManagerLogLevel),
         _database(std::move(databaseDomain))
     {
         _handlers.emplace(VTCPOpcode::VTCP_CONNECT_REQ, std::bind(&VTCPServer::onVtcpConnect, this, std::placeholders::_1, std::placeholders::_2));
@@ -24,7 +26,6 @@ public:
         _handlers.emplace(VTCPOpcode::VTCP_MANUAL_TEST_REQ, std::bind(&VTCPServer::onVtcpManualTest, this, std::placeholders::_1, std::placeholders::_2));
         _handlers.emplace(VTCPOpcode::VTCP_HISTORY_HEADER_REQ, std::bind(&VTCPServer::onVtcpHistoryHeader, this, std::placeholders::_1, std::placeholders::_2));
         _handlers.emplace(VTCPOpcode::VTCP_HISTORY_LOG_REQ, std::bind(&VTCPServer::onVtcpHistoryLog, this, std::placeholders::_1, std::placeholders::_2));
-        _manager.pjLibraryInit(softphoneManagerLogLevel);
     }
 
     ~VTCPServer() = default;
@@ -76,7 +77,7 @@ private:
 
         std::cout << "Domain: " << domain << " Amount: " << amount << std::endl;
 
-        auto log = _manager.runSpamTest(amount, domain);
+        auto log = _autoTestHandler.runSpamTest(amount, std::move(domain));
         _database.saveTestLog(log);
 
         Message response;
@@ -92,7 +93,14 @@ private:
 
         Message response;
         response.push(static_cast<int>(VTCPOpcode::VTCP_MANUAL_TEST_RES));
-        response.push(_manager.handleManualTest(request));
+        try
+        {        
+            _manualTestHandlers.at(id).handleManualTest(request, response);
+        }
+        catch(const std::exception& e)
+        {
+            std::cerr << e.what() << std::endl;
+        }
         send(id, response);
     }
 
@@ -117,24 +125,20 @@ private:
 
     void onSessionOpened(const std::size_t sessionId) override
     {
-        std::vector<Softphone> manualTestSoftphonesVector;
-        for(int i = START_ID; i <= START_ID + MANUAL_SOFTPHONE_AMOUNT; i++)
-        {
-            int softphoneId = sessionId * 10000 + i;
-        }
-        _manualTestSoftphones.emplace(sessionId, manualTestSoftphonesVector);
+        _manualTestHandlers.emplace(sessionId, ManualTestHandler(sessionId));
     }
     
     void onSessionClosed(const std::size_t sessionId) override
     {
-        _manualTestSoftphones.erase(sessionId);
+        _manualTestHandlers.erase(sessionId);
     }
 
     VTDatabase _database;
-    SoftphoneManager _manager;
+    PjManager _manager;
+    AutoTestHandler _autoTestHandler;
 
     std::unordered_map<VTCPOpcode, std::function<void(int ,const Message &)>> _handlers;
-    std::unordered_map<std::size_t, std::vector<Softphone>> _manualTestSoftphones;
+    std::unordered_map<std::size_t, ManualTestHandler> _manualTestHandlers;
 
     static constexpr int START_ID = 1000;
     static constexpr int MANUAL_SOFTPHONE_AMOUNT = 3;

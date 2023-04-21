@@ -61,6 +61,7 @@ private:
         }
 
         std::cout<< "Header data received" << std::endl;
+        _messageDataBuffer.clear();
         _messageDataBuffer.resize(data_size);
         boost::asio::async_read(*_socket,
             boost::asio::buffer(_messageDataBuffer, data_size),
@@ -76,7 +77,7 @@ private:
             return; 
 		}
 
-        _onDataReceived(std::move(_messageDataBuffer));
+        _onDataReceived(std::vector<std::uint8_t>(_messageDataBuffer));
         read();
     }
 

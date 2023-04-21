@@ -38,8 +38,10 @@ public:
     void callTo(const std::string & destination_uri)
     {
         pj::CallOpParam prm(true);
+
         prm.opt.audioCount = 1;
         prm.opt.videoCount = 0;
+
         makeCall(destination_uri, prm);
     }
 

@@ -29,7 +29,7 @@ public:
     ~SSPAccount()
     {
         shutdown();
-        LOG_INFO  << "*** Account " + std::to_string(getId()) +" is being deleted ***" << std::endl;
+        // LOG_INFO  << "*** Account " + std::to_string(getId()) +" is being deleted ***" << std::endl;
         std::cout << "*** Account " + std::to_string(getId()) +" is being deleted ***" << std::endl;        
     }
 
@@ -38,7 +38,7 @@ public:
         try{
             create(_config);
         } catch (...) {
-            LOG_ERORR << "Adding account failed" << std::endl;
+            // LOG_ERORR << "Adding account failed" << std::endl;
             std::cerr << "Adding account failed" << std::endl;
         }
     }
@@ -48,7 +48,7 @@ public:
         _onRegState(prm);
     }
 
-    void onIncomingCall(pj::OnIncomingCallParam &iprm) override
+    virtual void onIncomingCall(pj::OnIncomingCallParam &iprm) override
     {
         _onIncomingCall(iprm);
     }

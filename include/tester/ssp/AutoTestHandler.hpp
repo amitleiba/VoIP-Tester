@@ -86,26 +86,24 @@ private:
              << prm.code << std::endl;
     }
 
-    void onIncomingCall(std::shared_ptr<SSPCall> mainCall, std::shared_ptr<SSPCall> incomingCall, const int softphoneID)
+    void onIncomingCall(std::shared_ptr<SSPCall> &mainCall, std::shared_ptr<SSPCall> incomingCall, const int softphoneID)
     {
-        if(!mainCall->isActive())
+        if(mainCall && mainCall->isActive())
         {
-            mainCall = std::move(incomingCall);
+            pj::CallOpParam opcode;
+            opcode.statusCode = PJSIP_SC_BUSY_HERE;
+            incomingCall->hangup(opcode);
+            return;
+        }
+        mainCall = std::move(incomingCall);
             pj::CallInfo ci = mainCall->getInfo();
             pj::CallOpParam prm;
             LOG_INFO << "*** Incoming Call: " <<  ci.remoteUri << " ["
                     << ci.stateText << "]" << std::endl;
             std::cout << "*** Incoming Call: " <<  ci.remoteUri << " ["
                     << ci.stateText << "]" << std::endl;
-            prm.statusCode = PJSIP_SC_OK;
-            mainCall->answer(prm);
-        }
-        else
-        {
-            pj::CallOpParam opcode;
-            opcode.statusCode = PJSIP_SC_BUSY_HERE;
-            incomingCall->hangup(opcode);
-        }
+        prm.statusCode = PJSIP_SC_OK;
+        mainCall->answer(prm);
     }
 
     static constexpr int MILLISECONDS_TO_SECONDS = 1000;

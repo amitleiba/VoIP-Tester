@@ -27,6 +27,9 @@ private:
 
             // Init library
             pj::EpConfig ep_cfg;
+            ep_cfg.uaConfig.threadCnt = 2;
+            std::cout << ep_cfg.uaConfig.mainThreadOnly <<std::endl;
+            std::cout << ep_cfg.uaConfig.threadCnt <<std::endl;
             ep_cfg.logConfig.level = logLevel;
             _endpoint.libInit( ep_cfg );
 
@@ -38,6 +41,8 @@ private:
             // Start library
             _endpoint.libStart();
             std::cout << "*** PJSUA2 STARTED ***" << std::endl;
+
+            
         }
         catch(pj::Error & err)
         {

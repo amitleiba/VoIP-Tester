@@ -3,6 +3,8 @@
 #include<vector>
 #include<string>
 #include<cstring>
+#include <ctype.h>
+
 
 class Message
 {

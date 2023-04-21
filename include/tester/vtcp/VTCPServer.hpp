@@ -17,7 +17,7 @@ public:
     VTCPServer(const std::uint16_t port, int pjManagerPort,
     int pjManagerLogLevel, std::string databaseDomain) :
         TCPServer(port),
-        _manager(pjManagerPort, pjManagerLogLevel),
+        _manager(std::make_shared<PjManager>(pjManagerPort, pjManagerLogLevel)),
         _database(std::move(databaseDomain))
     {
         _handlers.emplace(VTCPOpcode::VTCP_CONNECT_REQ, std::bind(&VTCPServer::onVtcpConnect, this, std::placeholders::_1, std::placeholders::_2));
@@ -95,7 +95,7 @@ private:
         response.push(static_cast<int>(VTCPOpcode::VTCP_MANUAL_TEST_RES));
         try
         {        
-            _manualTestHandlers.at(id).handleManualTest(request, response);
+            _manualTestHandlers.at(id)->handleManualTest(request, response);
         }
         catch(const std::exception& e)
         {
@@ -125,7 +125,8 @@ private:
 
     void onSessionOpened(const std::size_t sessionId) override
     {
-        _manualTestHandlers.emplace(sessionId, ManualTestHandler(sessionId));
+        _manualTestHandlers.emplace(sessionId, 
+            std::make_shared<ManualTestHandler>(sessionId, std::bind(&VTCPServer::send, this, std::placeholders::_1, std::placeholders::_2)));
     }
     
     void onSessionClosed(const std::size_t sessionId) override
@@ -134,11 +135,11 @@ private:
     }
 
     VTDatabase _database;
-    PjManager _manager;
+    std::shared_ptr<PjManager> _manager;
     AutoTestHandler _autoTestHandler;
 
     std::unordered_map<VTCPOpcode, std::function<void(int ,const Message &)>> _handlers;
-    std::unordered_map<std::size_t, ManualTestHandler> _manualTestHandlers;
+    std::unordered_map<std::size_t, std::shared_ptr<ManualTestHandler>> _manualTestHandlers;
 
     static constexpr int START_ID = 1000;
     static constexpr int MANUAL_SOFTPHONE_AMOUNT = 3;

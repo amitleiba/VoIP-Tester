@@ -38,8 +38,9 @@ public:
         for(int i = 0; i < (amount * 2); i += 2)
         {
             _softphones.at(i + START_ID)->hangup();
-            _cv.wait(lock, [this, i](){ return !_softphones.at(i + START_ID)->isActive(); });
+            _cv.wait(lock, [this, i](){ return !_softphones.at(i + START_ID)->activeCall(); });
         }
+        pj_thread_sleep(TEST_SLEEP_DURATION * MILLISECONDS_TO_SECONDS);
         _softphones.clear();
         LOG_INFO << "finished run spam test" << std::endl;
         return Logger::getInstance().closeDocument();
@@ -55,16 +56,16 @@ private:
             int softphoneID = i + START_ID;
             _softphones.emplace(softphoneID, std::make_shared<Softphone>(
                 SoftphoneArguments(DEFAULT_SECRET, domain, DEFAULT_TIMEOUT, softphoneID),
+                std::bind(&AutoTestHandler::onIncomingCall, this, std::placeholders::_1,
+                    std::placeholders::_2, std::placeholders::_3),
                 std::bind(&AutoTestHandler::onCallState, this, std::placeholders::_1,
                     std::placeholders::_2, std::placeholders::_3),
                 std::bind(&AutoTestHandler::onRegState, this, std::placeholders::_1,
-                    std::placeholders::_2, std::placeholders::_3),
-                std::bind(&AutoTestHandler::onIncomingCall, this, std::placeholders::_1,
                     std::placeholders::_2, std::placeholders::_3)));
         }
     }
 
-    void onCallState(const pj::OnCallStateParam &prm, const pj::CallInfo &ci, const int softphoneID)
+    void onCallState(const pj::OnCallStateParam &prm, const pj::CallInfo &ci, Softphone& softphone)
     {
         PJ_UNUSED_ARG(prm);
         LOG_INFO << "*** Call: " <<  ci.remoteUri << " [" << ci.stateText
@@ -73,12 +74,12 @@ private:
         << "]" << std::endl;
         if (ci.state == PJSIP_INV_STATE_DISCONNECTED)
         {
-            _softphones.at(softphoneID)->clearCall();
+            // _softphones.at(softphoneID)->clearCall();
             onCallDisconnected();
         }
     }
 
-    void onRegState(const pj::OnRegStateParam &prm, const pj::AccountInfo &ai, const int softphoneID) 
+    void onRegState(const pj::OnRegStateParam &prm, const pj::AccountInfo &ai, Softphone& softphone) 
     {   
         LOG_INFO << (ai.regIsActive? "*** Register: code=" : "*** Unregister: code=")
              << prm.code << std::endl;
@@ -86,24 +87,23 @@ private:
              << prm.code << std::endl;
     }
 
-    void onIncomingCall(std::shared_ptr<SSPCall> &mainCall, std::shared_ptr<SSPCall> incomingCall, const int softphoneID)
+    void onIncomingCall(const pj::CallInfo& ci, pj::Call * incomingCall, Softphone& softphone)
     {
-        if(mainCall && mainCall->isActive())
+        if(softphone.activeCall())
         {
             pj::CallOpParam opcode;
             opcode.statusCode = PJSIP_SC_BUSY_HERE;
             incomingCall->hangup(opcode);
             return;
         }
-        mainCall = std::move(incomingCall);
-            pj::CallInfo ci = mainCall->getInfo();
-            pj::CallOpParam prm;
-            LOG_INFO << "*** Incoming Call: " <<  ci.remoteUri << " ["
-                    << ci.stateText << "]" << std::endl;
-            std::cout << "*** Incoming Call: " <<  ci.remoteUri << " ["
-                    << ci.stateText << "]" << std::endl;
+        softphone.setCall(incomingCall);
+        pj::CallOpParam prm;
+        LOG_INFO << "*** Incoming Call: " <<  ci.remoteUri << " ["
+                << ci.stateText << "]" << std::endl;
+        std::cout << "*** Incoming Call: " <<  ci.remoteUri << " ["
+                << ci.stateText << "]" << std::endl;
         prm.statusCode = PJSIP_SC_OK;
-        mainCall->answer(prm);
+        softphone.answer(prm);
     }
 
     static constexpr int MILLISECONDS_TO_SECONDS = 1000;

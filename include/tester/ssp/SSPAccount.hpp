@@ -2,57 +2,43 @@
 
 #include <iostream>
 #include <string>
+#include <memory>
+#include <functional>
 
 #include <pjsua2.hpp>
 
-#include "SSPCall.hpp"
-
 #include "../db/StreamLogger.hpp"
+
+class SSPCall;
 
 class SSPAccount : public pj::Account
 {
 public:
-    SSPAccount(const std::string & id, const std::string & domain, const std::string & secret,
-        std::function<void(const pj::OnIncomingCallParam &)> onIncomingCall,
-        std::function<void(const pj::OnRegStateParam &)> onRegState):
-        _onIncomingCall(std::move(onIncomingCall)), _onRegState(std::move(onRegState))
-    {
-        std::string uri = SIP + id + SEPARATOR + domain;
-        _config.idUri = uri;
-        _config.regConfig.registrarUri = SIP + domain;
+    SSPAccount(const std::string &id, const std::string &domain, const std::string &secret,
+                std::function<void(const pj::OnRegStateParam &)> onRegState,
+                std::function<void(const pj::OnCallStateParam &, const pj::CallInfo &)> onCallState,
+                std::function<void(const pj::CallInfo&, pj::Call *)> onIncomingCall);
 
-        pj::AuthCredInfo aci(SCHEME, REALM, id, DATA_TYPE, secret);
+    ~SSPAccount();
 
-        _config.sipConfig.authCreds.push_back(aci);
-    }
+    void apply();
 
-    ~SSPAccount()
-    {
-        shutdown();
-        // LOG_INFO  << "*** Account " + std::to_string(getId()) +" is being deleted ***" << std::endl;
-        std::cout << "*** Account " + std::to_string(getId()) +" is being deleted ***" << std::endl;        
-    }
+    void onRegState(pj::OnRegStateParam &prm) override;
 
-    void apply()
-    {
-        try{
-            create(_config);
-        } catch (...) {
-            // LOG_ERORR << "Adding account failed" << std::endl;
-            std::cerr << "Adding account failed" << std::endl;
-        }
-    }
+    void onIncomingCall(pj::OnIncomingCallParam &iprm) override;
 
-    void onRegState(pj::OnRegStateParam &prm) override 
-    {   
-        _onRegState(prm);
-    }
+    void onCallState(const pj::OnCallStateParam &prm);
 
-    virtual void onIncomingCall(pj::OnIncomingCallParam &iprm) override
-    {
-        _onIncomingCall(iprm);
-    }
-    
+    void call(const std::string &destUri);
+
+    void hangup();
+
+    void setCall(pj::Call *);
+
+    bool activeCall();
+
+    void answer(const pj::CallOpParam& callOpParam);
+
 private:
     static constexpr auto SIP = "sip:";
     static constexpr auto SEPARATOR = "@";
@@ -62,7 +48,9 @@ private:
 
     pj::AccountConfig _config;
 
-    std::function<void(const pj::OnIncomingCallParam &)> _onIncomingCall;
     std::function<void(const pj::OnRegStateParam &)> _onRegState;
-    
+    std::function<void(const pj::OnCallStateParam &, const pj::CallInfo &)> _onCallState;
+    std::function<void(const pj::CallInfo&, pj::Call *)> _onIncomingCall;
+
+    pj::Call *_call;
 };

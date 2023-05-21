@@ -27,10 +27,11 @@ private:
 
             // Init library
             pj::EpConfig ep_cfg;
-            ep_cfg.uaConfig.threadCnt = 2;
-            std::cout << ep_cfg.uaConfig.mainThreadOnly <<std::endl;
-            std::cout << ep_cfg.uaConfig.threadCnt <<std::endl;
+            // ep_cfg.uaConfig.threadCnt = 2;
+            // std::cout << ep_cfg.uaConfig.mainThreadOnly <<std::endl;
+            // std::cout << ep_cfg.uaConfig.threadCnt <<std::endl;
             ep_cfg.logConfig.level = logLevel;
+            ep_cfg.logConfig.consoleLevel = 5;
             _endpoint.libInit( ep_cfg );
 
             // Transport

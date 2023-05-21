@@ -4,39 +4,69 @@
 #include <string>
 #include <functional>
 #include <memory>
+#include <condition_variable>
+#include <mutex>
+#include <thread>
 
 #include "SSPAccount.hpp"
 #include "SSPCall.hpp"
 #include "SoftphoneArguments.hpp"
-
 #include "../db/StreamLogger.hpp"
 
 class Softphone
 {
 public:
     Softphone(const SoftphoneArguments & args,
-    std::function<void(const pj::OnCallStateParam &, const pj::CallInfo &, const int)> onCallState,
-    std::function<void(const pj::OnRegStateParam &, const pj::AccountInfo &, const int)> onRegState,
-    std::function<void(std::shared_ptr<SSPCall> &, std::shared_ptr<SSPCall>, const int)> onIncomingCall):
+    std::function<void(const pj::CallInfo&, pj::Call *, Softphone&)> onIncomingCall,
+    std::function<void(const pj::OnCallStateParam &, const pj::CallInfo &, Softphone&)> onCallState,
+    std::function<void(const pj::OnRegStateParam &, const pj::AccountInfo &, Softphone&)> onRegState):
         _softphoneId(args.id),
-        _account(std::make_shared<SSPAccount>(std::to_string(args.id), args.domain, args.secret,
-        std::bind(&Softphone::onIncomingCall, this, std::placeholders::_1),
-        std::bind(&Softphone::onRegState, this, std::placeholders::_1))),
-        // _call(std::make_shared<SSPCall>(&_account, std::bind(&Softphone::onCallState, this,
-        //     std::placeholders::_1))),
-        _call(nullptr),
-        _onCallState(std::move(onCallState)),
-        _onRegState(std::move(onRegState)),
-        _onIncomingCall(std::move(onIncomingCall)),
+        _account(std::to_string(args.id), args.domain, args.secret,
+            std::bind(&Softphone::onRegState, this, std::placeholders::_1),
+            std::bind(&Softphone::onCallState, this, std::placeholders::_1, std::placeholders::_2),
+            std::bind(&Softphone::onIncomingCall, this, std::placeholders::_1, std::placeholders::_2)),
         _answeredIncomingCall(false),
-        _declinedIncomingCall(false)
+        _declinedIncomingCall(false),
+        _active(true),
+        _onIncomingCall(onIncomingCall),
+        _onCallState(onCallState),
+        _onRegState(onRegState)
     {
         _uri = SIP + std::to_string(args.id) + SEPARATOR + args.domain;
 
-        _account->apply();
+        _account.apply();
     }
 
-    ~Softphone() = default;
+    ~Softphone()
+    {
+        _active = false;
+    }
+
+    void onIncomingCall(const pj::CallInfo& callInfo, pj::Call * incomingCall)
+    {
+        _onIncomingCall(callInfo, incomingCall, *this);
+    }
+
+    void onCallState(const pj::OnCallStateParam &prm, const pj::CallInfo &ci)
+    {
+        // PJ_UNUSED_ARG(prm);
+        // LOG_INFO << "*** Call: " <<  ci.remoteUri << " [" << ci.stateText
+        //     << "]" << std::endl;
+        // std::cout << "*** Call: " <<  ci.remoteUri << " [" << ci.stateText
+        //     << "]" << std::endl;
+        _onCallState(prm, ci, *this);
+    }
+
+    void onRegState(const pj::OnRegStateParam &prm) 
+    {   
+        pj::AccountInfo ai = _account.getInfo();
+        _onRegState(prm, ai, *this);
+        
+        // LOG_INFO << (ai.regIsActive? "*** Register: code=" : "*** Unregister: code=")
+        //     << prm.code << std::endl;  
+        // std::cout << (ai.regIsActive? "*** Register: code=" : "*** Unregister: code=")
+        //     << prm.code << std::endl;
+    }
 
     void call(const Softphone &sp)
     {
@@ -45,56 +75,17 @@ public:
 
     void call(const std::string & destUri)
     {
-        if(!_call)
-        {
-            _call = std::make_shared<SSPCall>(&(*_account), std::bind(&Softphone::onCallState, this,
-                    std::placeholders::_1));
-            
-        }
-        if(isRegistered() && !isActive())
-        {
-            _call->callTo(destUri);
-        }
+        _account.call(destUri);
     }
 
-    void onCallState(const pj::OnCallStateParam &prm)
+    void answer(const pj::CallOpParam& callOpParam)
     {
-        pj::CallInfo ci = _call->getInfo();
-        _onCallState(prm, ci, _softphoneId);
+        _account.answer(callOpParam);
     }
-
-    pjsip_inv_state getState()
-    {
-        return _call->getInfo().state;
-    }
-
-    void onIncomingCall(const pj::OnIncomingCallParam &iprm)
-    {
-        std::cout << "Main OnIncomingCall" << std::endl;
-        // auto incomingCall = std::make_shared<SSPCall>(&_account, std::bind(&Softphone::onCallState,
-        //     this, std::placeholders::_1), iprm.callId);
-        auto newCall = std::make_shared<SSPCall>(&(*_account), std::bind(&Softphone::onCallState, this,
-                std::placeholders::_1), iprm.callId);
-
-        
-        _onIncomingCall(_call, newCall, _softphoneId);
-    }
-
-    // void answer()
-    // {
-    //     pj::CallOpParam prm;
-    //     prm.statusCode = PJSIP_SC_OK;
-    //     _call->answer(prm);
-    // }
 
     void hangup()
     {
-        if(isActive())
-        {
-            pj::CallOpParam opcode;
-            opcode.statusCode = PJSIP_SC_DECLINE;
-            _call->hangup(opcode);
-        }
+        _account.hangup();
     }
 
     void setAnsweredIncomingCall(bool answer)
@@ -117,15 +108,9 @@ public:
         return _declinedIncomingCall;
     }
 
-    void onRegState(const pj::OnRegStateParam &prm) 
-    {   
-        pj::AccountInfo ai = _account->getInfo();
-        _onRegState(prm, ai, _softphoneId);
-    }
-
-    bool isActive()
+    void unregister()
     {
-        return _call && _call->isActive();
+        _account.setRegistration(false);
     }
 
     int getId() const
@@ -140,26 +125,30 @@ public:
 
     bool isRegistered()
     {
-        return _account->getInfo().regIsActive;
+        return _account.getInfo().regIsActive;
     }
 
-    void clearCall()
+    void setCall(pj::Call* newCall)
     {
-        _call = nullptr;
+        _account.setCall(newCall);
+    }
+
+    bool activeCall()
+    {
+        return _account.activeCall();
     }
     
 private:
     static constexpr auto SIP = "sip:";
     static constexpr auto SEPARATOR = "@";
-
     std::string _uri;
     const int _softphoneId;
-    std::shared_ptr<SSPAccount> _account;
-    std::shared_ptr<SSPCall> _call;
-    std::function<void(const pj::OnCallStateParam &, const pj::CallInfo &, const int)> _onCallState;
-    std::function<void(const pj::OnRegStateParam &, const pj::AccountInfo &, const int)> _onRegState;
-    std::function<void(std::shared_ptr<SSPCall> &, std::shared_ptr<SSPCall>, const int)> _onIncomingCall;
-
+    SSPAccount _account;
     bool _answeredIncomingCall;
     bool _declinedIncomingCall;
+    bool _active;
+
+    std::function<void(const pj::CallInfo&, pj::Call *, Softphone&)> _onIncomingCall;
+    std::function<void(const pj::OnCallStateParam &, const pj::CallInfo &, Softphone&)> _onCallState;
+    std::function<void(const pj::OnRegStateParam &, const pj::AccountInfo &, Softphone&)> _onRegState;
 };

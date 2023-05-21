@@ -8,7 +8,6 @@
 
 #include "../db/VTDatabase.hpp"
 #include "../ssp/AutoTestHandler.hpp"
-#include "../ssp/ManualTestHandler.hpp"
 #include "../ssp/PjManager.hpp"
 
 class VTCPServer : public TCPServer
@@ -23,7 +22,6 @@ public:
         _handlers.emplace(VTCPOpcode::VTCP_CONNECT_REQ, std::bind(&VTCPServer::onVtcpConnect, this, std::placeholders::_1, std::placeholders::_2));
         _handlers.emplace(VTCPOpcode::VTCP_DISCONNECT_REQ, std::bind(&VTCPServer::onVtcpDisconnect, this, std::placeholders::_1, std::placeholders::_2));
         _handlers.emplace(VTCPOpcode::VTCP_AUTO_TEST_REQ, std::bind(&VTCPServer::onVtcpAutoTest, this, std::placeholders::_1, std::placeholders::_2));
-        _handlers.emplace(VTCPOpcode::VTCP_MANUAL_TEST_REQ, std::bind(&VTCPServer::onVtcpManualTest, this, std::placeholders::_1, std::placeholders::_2));
         _handlers.emplace(VTCPOpcode::VTCP_HISTORY_HEADER_REQ, std::bind(&VTCPServer::onVtcpHistoryHeader, this, std::placeholders::_1, std::placeholders::_2));
         _handlers.emplace(VTCPOpcode::VTCP_HISTORY_LOG_REQ, std::bind(&VTCPServer::onVtcpHistoryLog, this, std::placeholders::_1, std::placeholders::_2));
     }
@@ -87,23 +85,6 @@ private:
         send(id, response);
     }
 
-    void onVtcpManualTest(const std::size_t id, const Message & request)
-    {
-        std::cout << "Client requested Manual test" << std::endl;
-
-        Message response;
-        response.push(static_cast<int>(VTCPOpcode::VTCP_MANUAL_TEST_RES));
-        try
-        {        
-            _manualTestHandlers.at(id)->handleManualTest(request, response);
-        }
-        catch(const std::exception& e)
-        {
-            std::cerr << e.what() << std::endl;
-        }
-        send(id, response);
-    }
-
     void onVtcpHistoryHeader(const std::size_t id, const Message & request)
     {
         Message response;
@@ -125,13 +106,12 @@ private:
 
     void onSessionOpened(const std::size_t sessionId) override
     {
-        _manualTestHandlers.emplace(sessionId, 
-            std::make_shared<ManualTestHandler>(sessionId, std::bind(&VTCPServer::send, this, std::placeholders::_1, std::placeholders::_2)));
+        
     }
     
     void onSessionClosed(const std::size_t sessionId) override
     {
-        _manualTestHandlers.erase(sessionId);
+        
     }
 
     VTDatabase _database;
@@ -139,8 +119,4 @@ private:
     AutoTestHandler _autoTestHandler;
 
     std::unordered_map<VTCPOpcode, std::function<void(int ,const Message &)>> _handlers;
-    std::unordered_map<std::size_t, std::shared_ptr<ManualTestHandler>> _manualTestHandlers;
-
-    static constexpr int START_ID = 1000;
-    static constexpr int MANUAL_SOFTPHONE_AMOUNT = 3;
 };

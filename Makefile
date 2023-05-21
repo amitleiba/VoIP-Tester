@@ -35,8 +35,10 @@ CC	:=	g++
 
 #*****START OF USER DATA*****
 
-PJSIP := ~/Documents/Libraries/pjproject/
+PJSIP := ~/Documents/Libraries/pjproject-2.13
 include $(PJSIP)/build.mak
+
+include /usr/local/etc/PcapPlusPlus.mk
 
 
 
@@ -52,7 +54,7 @@ WFLAGS	:=
 
 #---COMPILER FLAGS--- (-I<include path>, Example: -I/usr/local/include)
 
-CFLAGS := -ggdb	-std=c++20 -I$(INC_DIR) $(PJ_CXXFLAGS)	-I/usr/local/include/mongocxx/v_noabi	-I/usr/local/include/bsoncxx/v_noabi	-pthread
+CFLAGS := -ggdb	-std=c++20 -I$(INC_DIR) $(PJ_CXXFLAGS)	-I/usr/local/include/mongocxx/v_noabi	-I/usr/local/include/bsoncxx/v_noabi	-pthread	$(PCAPPP_INCLUDES)
 
 
 #---LINKER FLAGS--- (-L<library path>, Example: -L/usr/local/lib)
@@ -61,7 +63,7 @@ LDFLAGS := $(PJ_LDXXFLAGS)
 
 #---LIBRARIES--- (-l<lib name>, Example: -lPcap++, -lmongocxx.so)
 
-LDLIBS := $(PJ_LDXXLIBS) `pkg-config --libs libpjproject`	-lmongocxx	-lbsoncxx
+LDLIBS := $(PJ_LDXXLIBS) `pkg-config --libs libpjproject`	-lmongocxx	-lbsoncxx $(PCAPPP_LIBS_DIR) $(PCAPPP_LIBS)
 
 
 #*****END OF FLAGS*****

@@ -72,14 +72,22 @@ private:
 
         std::string domain = request.readString();
         int amount = request.readInteger();
+        int callDuration = request.readInteger();
 
         std::cout << "Domain: " << domain << " Amount: " << amount << std::endl;
 
-        auto log = _autoTestHandler.runSpamTest(amount, std::move(domain));
+        Message startResponse;
+        startResponse.push(static_cast<int>(VTCPOpcode::VTCP_AUTO_TEST_LOCK));
+        broadcast(startResponse);
+
+        auto log = _autoTestHandler.runSpamTest(std::move(domain), amount, callDuration);
         _database.saveTestLog(log);
 
-        Message response;
+        Message endResponse;
+        endResponse.push(static_cast<int>(VTCPOpcode::VTCP_AUTO_TEST_UNLOCK));
+        broadcast(endResponse);
 
+        Message response;
         response.push(static_cast<int>(VTCPOpcode::VTCP_AUTO_TEST_RES));
         response.push(bsoncxx::to_json(log.view()));
         send(id, response);

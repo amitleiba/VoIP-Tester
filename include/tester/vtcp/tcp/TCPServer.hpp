@@ -59,6 +59,14 @@ protected:
         }
     }
 
+    void broadcast(const Message& message)
+    {
+        for(const auto& [_, session] :_sessions)
+        {
+            session->send(message);
+        }
+    }
+
 private:
     void onClientConnected(const std::size_t id, tcp::socket socket)
     {

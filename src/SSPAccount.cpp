@@ -100,7 +100,7 @@ void SSPAccount::call(const std::string & destUri)
 
 void SSPAccount::hangup()
 {
-    if(_call->isActive())
+    if(activeCall())
     {
         pj::CallOpParam opcode;
         opcode.statusCode = PJSIP_SC_DECLINE;
